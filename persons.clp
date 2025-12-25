@@ -201,11 +201,11 @@
 ; 4. ВЫВОД СООБЩЕНИЙ В ПРОКСИ
 ; ====================================================
 
-(defrule update-proxy-messages
-    (declare (salience -10))
-    ?msg <- (sendmessage (value ?text))
-    ?proxy <- (ioproxy (messages $?list))
-    =>
-    (modify ?proxy (messages $?list ?text))
-    (retract ?msg)
+(defrule collect-messages-to-proxy
+   (declare (salience -10)) ; Низкий приоритет, сработает в конце
+   ?msg <- (sendmessage (value ?text))
+   ?proxy <- (ioproxy (messages $?current-msgs))
+   =>
+   (modify ?proxy (messages $?current-msgs ?text))
+   (retract ?msg)
 )
