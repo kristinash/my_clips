@@ -1,20 +1,24 @@
-﻿using System;
+using CLIPSNET;
+using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Windows.Forms;
-using System.Text.RegularExpressions;
-using System.Linq;
+using System.Drawing;
 using System.Globalization;
-using CLIPSNET; // Библиотека экспертной системы
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Windows.Forms;
 
 namespace ClipsFormsExample
 {
     public partial class ClipsFormsExample : Form
     {
-        // Явное указание пространства имен для устранения неоднозначности
         private CLIPSNET.Environment clips = new CLIPSNET.Environment();
-        private string loadedFilePath = "";
+        private List<string> loadedFilePaths = new List<string>();
+        private Dictionary<string, double> ingredientCFValues = new Dictionary<string, double>();
+        private bool isEditing = false;
+        private CultureInfo invariantCulture = CultureInfo.InvariantCulture;
+        private CultureInfo uiCulture = CultureInfo.CurrentUICulture; // Для отображения в UI
 
         public ClipsFormsExample()
         {
@@ -24,25 +28,22 @@ namespace ClipsFormsExample
 
         private void SetupListViews()
         {
-            // Настройка таблицы выбора ингредиентов
             listView1.View = View.Details;
             listView1.CheckBoxes = true;
             listView1.FullRowSelect = true;
             listView1.Columns.Clear();
-            listView1.Columns.Add("Ингредиент", 200);
-            listView1.Columns.Add("Наличие", 70);
+            listView1.Columns.Add("Ингредиент", 90);
+            listView1.Columns.Add("Уверенность (-1...1)", 120);
 
-            // Настройка таблицы результатов
             listView2.View = View.Details;
             listView2.FullRowSelect = true;
             listView2.Columns.Clear();
-            listView2.Columns.Add("Блюдо / Продукт", 200);
+            listView2.Columns.Add("Блюдо / Продукт", 90);
             listView2.Columns.Add("Уверенность (CF)", 110);
         }
 
-        #region Вспомогательные методы (Кодировка и Очистка)
+        #region Вспомогательные методы
 
-        // Исправляет "кракозябры", переводя системную кодировку в UTF-8
         private string DecodeClipsString(string text)
         {
             if (string.IsNullOrEmpty(text)) return "";
@@ -54,12 +55,40 @@ namespace ClipsFormsExample
             catch { return text; }
         }
 
-        // Удаляет лишние символы из кода CLIPS перед парсингом
         private string CleanTextContent(string text)
         {
             if (string.IsNullOrEmpty(text)) return text;
             if (text.StartsWith("\ufeff")) text = text.Substring(1);
             return Regex.Replace(text, @"[\u0000-\u0008\u000B\u000C\u000E-\u001F]", "");
+        }
+
+        // Корректное преобразование числа в строку для CLIPS (всегда с точкой)
+        private string ToClipsNumberString(double value)
+        {
+            return value.ToString("F6", invariantCulture);
+        }
+
+        // Корректное преобразование числа для отображения в UI
+        private string ToDisplayNumberString(double value)
+        {
+            return value.ToString("F2", uiCulture);
+        }
+
+        // Корректное преобразование строки в число с учетом разных форматов
+        private double ParseNumberString(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return 1.0;
+
+            // Пробуем разные форматы
+            text = text.Trim().Replace(',', '.'); // Заменяем запятые на точки
+
+            if (double.TryParse(text, NumberStyles.Any, invariantCulture, out double result))
+            {
+                return Math.Max(-1.0, Math.Min(1.0, result));
+            }
+
+            return 1.0; // Значение по умолчанию при ошибке
         }
 
         #endregion
@@ -68,21 +97,38 @@ namespace ClipsFormsExample
 
         private void openFile_Click(object sender, EventArgs e)
         {
+            clipsOpenFileDialog.Multiselect = true; // Разрешаем выбор нескольких файлов
             if (clipsOpenFileDialog.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    loadedFilePath = clipsOpenFileDialog.FileName;
-                    string content = File.ReadAllText(loadedFilePath, Encoding.UTF8);
-                    codeBox.Text = CleanTextContent(content);
+                    // Очищаем предыдущие данные при новой загрузке группы файлов
+                    loadedFilePaths.Clear();
+                    loadedFilePaths.AddRange(clipsOpenFileDialog.FileNames);
 
-                    ParseClipsFile(content);
-                    outputBox.Text = "Файл успешно загружен: " + Path.GetFileName(loadedFilePath) + "\r\n";
-                    outputBox.AppendText("Выберите ингредиенты и нажмите 'Дальше'." + "\r\n");
+                    codeBox.Clear();
+                    StringBuilder combinedContent = new StringBuilder();
+
+                    foreach (string filePath in loadedFilePaths)
+                    {
+                        string content = File.ReadAllText(filePath, Encoding.UTF8);
+                        combinedContent.AppendLine($";; --- ФАЙЛ: {Path.GetFileName(filePath)} ---");
+                        combinedContent.AppendLine(CleanTextContent(content));
+                        combinedContent.AppendLine();
+                    }
+
+                    codeBox.Text = combinedContent.ToString();
+                    ParseClipsFile(codeBox.Text); // Парсим объединенный текст для поиска ингредиентов
+
+                    outputBox.Text = $"Загружено файлов: {loadedFilePaths.Count}\r\n";
+                    foreach (var path in loadedFilePaths)
+                        outputBox.AppendText($"- {Path.GetFileName(path)}\r\n");
+
+                    outputBox.AppendText("\r\nВыберите ингредиенты и нажмите 'Дальше'.\r\n");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Ошибка при чтении файла: " + ex.Message);
+                    MessageBox.Show("Ошибка при чтении файлов: " + ex.Message);
                 }
             }
         }
@@ -91,8 +137,8 @@ namespace ClipsFormsExample
         {
             listView1.Items.Clear();
             listView2.Items.Clear();
+            ingredientCFValues.Clear();
 
-            // Поиск всех определений ингредиентов в файле
             var matches = Regex.Matches(text, @"\(ingredient\s+\(name\s+""([^""]+)""\)", RegexOptions.IgnoreCase);
             var uniqueNames = new HashSet<string>();
 
@@ -103,12 +149,12 @@ namespace ClipsFormsExample
 
             foreach (var name in uniqueNames)
             {
-                // Исходный список для выбора
+                ingredientCFValues[name] = 1.0;
+
                 var lvi1 = new ListViewItem(name);
                 lvi1.SubItems.Add("");
                 listView1.Items.Add(lvi1);
 
-                // Правый список для отображения CF
                 var lvi2 = new ListViewItem(name);
                 lvi2.SubItems.Add("0.00");
                 listView2.Items.Add(lvi2);
@@ -121,9 +167,9 @@ namespace ClipsFormsExample
 
         private void nextBtn_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(loadedFilePath))
+            if (loadedFilePaths.Count == 0)
             {
-                MessageBox.Show("Загрузите файл .clp!");
+                MessageBox.Show("Загрузите хотя бы один файл .clp!");
                 return;
             }
 
@@ -133,27 +179,35 @@ namespace ClipsFormsExample
                 outputBox.AppendText("=== ЗАПУСК ЭКСПЕРТНОЙ СИСТЕМЫ ===" + "\r\n\r\n");
 
                 clips.Clear();
-                clips.Load(loadedFilePath);
+
+                // ПОСЛЕДОВАТЕЛЬНАЯ ЗАГРУЗКА
+                foreach (string filePath in loadedFilePaths)
+                {
+                    clips.Load(filePath);
+                }
+
                 clips.Reset();
 
-                // 1. Отправка фактов на основе выбранных пунктов
+                // Далее ваш неизменный код отправки фактов...
+                outputBox.AppendText("ПОЛУЧЕНЫ ИНГРЕДИЕНТЫ:\r\n");
                 foreach (ListViewItem item in listView1.Items)
                 {
                     if (item.Checked)
                     {
-                        clips.Eval($"(assert (input-question (name \"{item.Text}\") (certainty 1.0)))");
+                        string ingredientName = item.Text;
+                        double cf = ingredientCFValues.ContainsKey(ingredientName) ? ingredientCFValues[ingredientName] : 1.0;
+                        string cfString = ToClipsNumberString(cf);
+                        clips.Eval($"(assert (input-question (name \"{ingredientName}\") (certainty {cfString})))");
+                        outputBox.AppendText($"   - {ingredientName} (коэффициент: {ToDisplayNumberString(cf)})\r\n");
                     }
                 }
 
-                // 2. Запуск логического вывода
+                outputBox.AppendText("------------------------------------------------\r\n");
                 long rulesCount = clips.Run();
                 outputBox.AppendText("Правил сработало: " + rulesCount + "\r\n");
-                outputBox.AppendText("------------------------------------------------" + "\r\n");
+                outputBox.AppendText("------------------------------------------------\r\n");
 
-                // 3. Вывод сообщений из ioproxy (с отступами)
                 ShowProxyLogs();
-
-                // 4. Обновление таблицы результатов (без кракозябр)
                 UpdateResultsTable();
             }
             catch (Exception ex)
@@ -164,7 +218,6 @@ namespace ClipsFormsExample
 
         private void ShowProxyLogs()
         {
-            // Ищем факт прокси, где копятся сообщения
             string evalStr = "(find-fact ((?f ioproxy)) TRUE)";
             var matches = (MultifieldValue)clips.Eval(evalStr);
 
@@ -175,10 +228,9 @@ namespace ClipsFormsExample
 
                 if (msgs.Count > 0)
                 {
-                    outputBox.AppendText("ОТЧЕТ О ПРИГОТОВЛЕНИИ:" + "\r\n");
+                    outputBox.AppendText("ОТЧЕТ О ПРИГОТОВЛЕНИИ:\r\n");
                     for (int i = 0; i < msgs.Count; i++)
                     {
-                        // Применяем декодирование и добавляем отступ в 5 пробелов
                         string cleanMsg = DecodeClipsString(msgs[i].ToString().Trim('"'));
                         outputBox.AppendText("     " + cleanMsg + "\r\n");
                     }
@@ -186,7 +238,7 @@ namespace ClipsFormsExample
             }
             else
             {
-                outputBox.AppendText("Система не вернула текстовых уведомлений." + "\r\n");
+                outputBox.AppendText("Система не вернула текстовых уведомлений.\r\n");
             }
         }
 
@@ -194,54 +246,157 @@ namespace ClipsFormsExample
         {
             listView2.Items.Clear();
 
-            // Получаем все ингредиенты, у которых CF > 0
-            var results = (MultifieldValue)clips.Eval("(find-all-facts ((?f ingredient)) (> ?f:certainty 0))");
-
-            outputBox.AppendText("\r\n" + "ФИНАЛЬНЫЕ КОЭФФИЦИЕНТЫ:" + "\r\n");
-
-            for (int i = 0; i < results.Count; i++)
+            var proxyFact = (MultifieldValue)clips.Eval("(find-all-facts ((?f ioproxy)) TRUE)");
+            if (proxyFact.Count > 0)
             {
-                FactAddressValue f = (FactAddressValue)results[i];
+                FactAddressValue proxy = (FactAddressValue)proxyFact[0];
+                MultifieldValue messages = (MultifieldValue)proxy["messages"];
 
-                string rawName = f["name"].ToString().Trim('"');
-                string name = DecodeClipsString(rawName);
+                // Убрали строку: outputBox.AppendText("\r\n--- РЕЗУЛЬТАТЫ ВЫВОДА ---\r\n");
 
-                double cf = double.Parse(f["certainty"].ToString(), CultureInfo.InvariantCulture);
+                for (int i = 0; i < messages.Count; i++)
+                {
+                    string msgText = DecodeClipsString(messages[i].ToString().Trim('"'));
 
-                // Добавление в таблицу
-                ListViewItem item = new ListViewItem(name);
-                item.SubItems.Add(cf.ToString("F2"));
+                    // Убрали строку: outputBox.AppendText(msgText + "\r\n");
 
-                // Зеленый фон для успешно приготовленных блюд (высокий CF)
-                if (cf >= 0.7) item.BackColor = System.Drawing.Color.LightGreen;
-                listView2.Items.Add(item);
+                    // Пытаемся разделить строку на Название и CF с помощью Regex
+                    var match = System.Text.RegularExpressions.Regex.Match(msgText, @"(.+)\(CF=(.+)\)");
 
-                // Дублируем важные результаты в текстовое поле
-                outputBox.AppendText("   -> " + name + " [CF = " + cf.ToString("F2") + "]\r\n");
+                    if (match.Success)
+                    {
+                        string name = match.Groups[1].Value.Trim();
+                        string cfString = match.Groups[2].Value.Trim();
+
+                        double.TryParse(cfString.Replace(',', '.'),
+                                        System.Globalization.NumberStyles.Any,
+                                        System.Globalization.CultureInfo.InvariantCulture,
+                                        out double cfValue);
+
+                        ListViewItem item = new ListViewItem(name);
+                        item.SubItems.Add(cfValue.ToString("F2"));
+
+                        if (cfValue > 0.6)
+                        {
+                            item.BackColor = Color.LightGreen;
+                        }
+
+                        listView2.Items.Add(item);
+                    }
+                    else
+                    {
+                        listView2.Items.Add(new ListViewItem(msgText));
+                    }
+                }
             }
-
-            outputBox.AppendText("\r\n" + "=== ОБРАБОТКА ЗАВЕРШЕНА ===" + "\r\n");
         }
-
         #endregion
 
         #region Интерфейсные события
 
         private void listView1_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            // Обновление галочки во второй колонке через Invoke
             this.BeginInvoke(new MethodInvoker(() => {
                 if (e.Index < listView1.Items.Count)
-                    listView1.Items[e.Index].SubItems[1].Text = e.NewValue == CheckState.Checked ? "✓" : "";
+                {
+                    ListViewItem item = listView1.Items[e.Index];
+                    bool isChecked = e.NewValue == CheckState.Checked;
+
+                    if (isChecked)
+                    {
+                        string ingredientName = item.Text;
+                        double cf = ingredientCFValues.ContainsKey(ingredientName) ?
+                                  ingredientCFValues[ingredientName] : 1.0;
+                        item.SubItems[1].Text = ToDisplayNumberString(cf);
+                    }
+                    else
+                    {
+                        item.SubItems[1].Text = "";
+                    }
+                }
             }));
+        }
+
+        private void listView1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            ListViewHitTestInfo hit = listView1.HitTest(e.Location);
+            if (hit.Item != null && hit.Item.Checked && hit.SubItem == hit.Item.SubItems[1])
+            {
+                if (isEditing) return;
+                isEditing = true;
+
+                Rectangle rect = hit.SubItem.Bounds;
+                TextBox editBox = new TextBox();
+                editBox.Bounds = new Rectangle(rect.Left, rect.Top, rect.Width, rect.Height);
+                editBox.Text = hit.SubItem.Text;
+                editBox.BorderStyle = BorderStyle.FixedSingle;
+                editBox.Font = listView1.Font;
+
+                editBox.KeyPress += (s, args) => {
+                    char c = args.KeyChar;
+                    bool isDigit = char.IsDigit(c);
+                    bool isControl = char.IsControl(c);
+                    bool isDecimalSeparator = c == '.' || c == ',';
+
+                    if (!isControl && !isDigit && !isDecimalSeparator && c != '-')
+                    {
+                        args.Handled = true;
+                    }
+                };
+
+                listView1.Controls.Add(editBox);
+                editBox.BringToFront();
+                editBox.Focus();
+                editBox.SelectAll();
+
+                editBox.LostFocus += (s, args) => {
+                    SaveCFValue(editBox, hit.Item);
+                };
+
+                editBox.KeyDown += (s, args) => {
+                    if (args.KeyCode == Keys.Enter)
+                    {
+                        SaveCFValue(editBox, hit.Item);
+                    }
+                    else if (args.KeyCode == Keys.Escape)
+                    {
+                        listView1.Controls.Remove(editBox);
+                        editBox.Dispose();
+                        isEditing = false;
+                    }
+                };
+            }
+        }
+
+        private void SaveCFValue(TextBox editBox, ListViewItem item)
+        {
+            string ingredientName = item.Text;
+            double cf = ParseNumberString(editBox.Text);
+
+            ingredientCFValues[ingredientName] = cf;
+            item.SubItems[1].Text = ToDisplayNumberString(cf);
+
+            listView1.Controls.Remove(editBox);
+            editBox.Dispose();
+            isEditing = false;
         }
 
         private void resetBtn_Click(object sender, EventArgs e)
         {
-            foreach (ListViewItem item in listView1.Items) item.Checked = false;
+            foreach (ListViewItem item in listView1.Items)
+            {
+                item.Checked = false;
+                item.SubItems[1].Text = "";
+
+                if (ingredientCFValues.ContainsKey(item.Text))
+                {
+                    ingredientCFValues[item.Text] = 1.0;
+                }
+            }
+
             listView2.Items.Clear();
             outputBox.Clear();
-            outputBox.Text = "Система сброшена." + "\r\n";
+            outputBox.Text = "Система сброшена.\r\n";
         }
 
         private void saveAsButton_Click(object sender, EventArgs e)
@@ -249,6 +404,20 @@ namespace ClipsFormsExample
             if (clipsSaveFileDialog.ShowDialog() == DialogResult.OK)
             {
                 File.WriteAllText(clipsSaveFileDialog.FileName, codeBox.Text, Encoding.UTF8);
+            }
+        }
+
+        private void listView1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.F2 && listView1.SelectedItems.Count > 0)
+            {
+                var item = listView1.SelectedItems[0];
+                if (item.Checked)
+                {
+                    var bounds = item.SubItems[1].Bounds;
+                    listView1_MouseDoubleClick(sender,
+                        new MouseEventArgs(MouseButtons.Left, 2, bounds.Left + 5, bounds.Top + 5, 0));
+                }
             }
         }
 
