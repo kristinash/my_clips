@@ -15,7 +15,8 @@
 
 (deftemplate ingredient 
     (slot name) 
-    (slot certainty (default 0.0))
+    (slot certainty (default 0.0)) 
+    (slot type (default raw)) 
 )
 
 (deftemplate token 
@@ -53,46 +54,51 @@
 
 (deffacts initial-data
     (ioproxy (fact-id 112))
-    ; Базовые продукты
-    (ingredient (name "Мука пшеничная") (certainty 0.0))
-    (ingredient (name "Вода") (certainty 0.0))
-    (ingredient (name "Дрожжи") (certainty 0.0))
-    (ingredient (name "Соль") (certainty 0.0))
-    (ingredient (name "Томаты") (certainty 0.0))
-    (ingredient (name "Томатная паста") (certainty 0.0))
-    (ingredient (name "Чеснок") (certainty 0.0))
-    (ingredient (name "Базилик") (certainty 0.0))
-    (ingredient (name "Масло оливковое") (certainty 0.0))
-    (ingredient (name "Сыр Моцарелла") (certainty 0.0))
-    (ingredient (name "Сыр Российский") (certainty 0.0))
-    ; Целевые результаты
-    (ingredient (name "Тесто для пиццы") (certainty 0.0))
-    (ingredient (name "Соус томатный") (certainty 0.0))
-    (ingredient (name "Пицца Маргарита") (certainty 0.0))
-    ; Токены для однократного срабатывания вариантов
+    ; Обычные ингредиенты
+    (ingredient (name "Мука пшеничная"))
+    (ingredient (name "Вода"))
+    (ingredient (name "Дрожжи"))
+    (ingredient (name "Соль"))
+    (ingredient (name "Томаты"))
+    (ingredient (name "Томатная паста"))
+    (ingredient (name "Чеснок"))
+    (ingredient (name "Базилик"))
+    (ingredient (name "Масло оливковое"))
+    (ingredient (name "Сыр Моцарелла"))
+    (ingredient (name "Сыр Российский"))
+    
+    ; Теперь они без "type result", чтобы C# их увидел
+    (ingredient (name "Тесто для пиццы"))
+    (ingredient (name "Соус томатный"))
+    (ingredient (name "Пицца Маргарита"))
+    
     (token (name "t-dough-std"))
     (token (name "t-sauce-fresh")) 
     (token (name "t-sauce-fast"))
     (token (name "t-pizza-premium")) 
     (token (name "t-pizza-budget"))
+    (token (name "t-header"))
 )
 
 ; ====================================================
-; 3. ЛОГИКА ПРИГОТОВЛЕНИЯ С ВЫВОДОМ ИНГРЕДИЕНТОВ
+; 3. ЭТАП 1: ОБРАБОТКА ВВОДА (Salience 100)
 ; ====================================================
 
-; Синхронизация ввода из C#
 (defrule match-ingredients
     (declare (salience 100))
-    ?f <- (ingredient (name ?name) (certainty ?old-c))
+    ?f <- (ingredient (name ?name))
     ?q <- (input-question (name ?n&?name) (certainty ?new-c))
     =>
     (modify ?f (certainty ?new-c))
     (retract ?q)
 )
 
-; --- ТЕСТО ---
+; ====================================================
+; 4. ЭТАП 2: ЛОГИКА ПРИГОТОВЛЕНИЯ (Salience 10)
+; ====================================================
+
 (defrule make-pizza-dough-std
+    (declare (salience 10))
     ?tk <- (token (name "t-dough-std"))
     (ingredient (name "Мука пшеничная") (certainty ?c1&:(> ?c1 0.1)))
     (ingredient (name "Вода") (certainty ?c2&:(> ?c2 0.1)))
@@ -101,20 +107,14 @@
     ?f <- (ingredient (name "Тесто для пиццы") (certainty ?cur-c))
     =>
     (retract ?tk)
-    (bind ?rule-cf 0.95)
-    (bind ?avg-cf (weighted-avg ?c1 10 ?c2 2 ?c3 2 ?c4 1))
-    (bind ?res (* ?avg-cf ?rule-cf))
-    (bind ?cnew (max-certainty ?cur-c ?res))
-    (modify ?f (certainty ?cnew))
-    (assert (sendmessage 
-        (value (str-cat 
-            "ТЕСТО: [Мука пшеничная + Вода + Дрожжи + Соль] -> Тесто для пиццы (CF=" ?cnew ")"
-        ))
-    ))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 2 ?c3 2 ?c4 1) 0.95))
+    ; Здесь мы добавляем (type result)
+    (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
+    (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто (стандарт) CF=" ?res))))
 )
 
-; --- СОУС (Вариант 1: Свежий) ---
 (defrule make-sauce-fresh
+    (declare (salience 10))
     ?tk <- (token (name "t-sauce-fresh"))
     (ingredient (name "Томаты") (certainty ?c1&:(> ?c1 0.1)))
     (ingredient (name "Чеснок") (certainty ?c2&:(> ?c2 0.1)))
@@ -123,40 +123,26 @@
     ?f <- (ingredient (name "Соус томатный") (certainty ?cur-c))
     =>
     (retract ?tk)
-    (bind ?rule-cf 1.0)
-    (bind ?avg-cf (weighted-avg ?c1 10 ?c2 1 ?c3 1 ?c4 3))
-    (bind ?res (* ?avg-cf ?rule-cf))
-    (bind ?cnew (max-certainty ?cur-c ?res))
-    (modify ?f (certainty ?cnew))
-    (assert (sendmessage 
-        (value (str-cat 
-            "СОУС: [Томаты + Чеснок + Базилик + Масло оливковое] -> Соус томатный (свежий) (CF=" ?cnew ")"
-        ))
-    ))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 1 ?c3 1 ?c4 3) 1.0))
+    (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
+    (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус (свежий) CF=" ?res))))
 )
 
-; --- СОУС (Вариант 2: Быстрый) ---
 (defrule make-sauce-fast
+    (declare (salience 10))
     ?tk <- (token (name "t-sauce-fast"))
     (ingredient (name "Томатная паста") (certainty ?c1&:(> ?c1 0.1)))
     (ingredient (name "Вода") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Соус томатный") (certainty ?cur-c))
     =>
     (retract ?tk)
-    (bind ?rule-cf 0.6)
-    (bind ?avg-cf (weighted-avg ?c1 10 ?c2 5))
-    (bind ?res (* ?avg-cf ?rule-cf))
-    (bind ?cnew (max-certainty ?cur-c ?res))
-    (modify ?f (certainty ?cnew))
-    (assert (sendmessage 
-        (value (str-cat 
-            "СОУС: [Томатная паста + Вода] -> Соус томатный (быстрый) (CF=" ?cnew ")"
-        ))
-    ))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 5) 0.6))
+    (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
+    (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус (быстрый) CF=" ?res))))
 )
 
-; --- ПИЦЦА МАРГАРИТА (Рецепт 1: с Моцареллой) ---
 (defrule make-margherita-premium
+    (declare (salience 10))
     ?tk <- (token (name "t-pizza-premium"))
     (ingredient (name "Тесто для пиццы") (certainty ?c1&:(> ?c1 0.1)))
     (ingredient (name "Соус томатный") (certainty ?c2&:(> ?c2 0.1)))
@@ -164,20 +150,13 @@
     ?f <- (ingredient (name "Пицца Маргарита") (certainty ?cur-c))
     =>
     (retract ?tk)
-    (bind ?rule-cf 1.0)
-    (bind ?avg-cf (weighted-avg ?c1 5 ?c2 5 ?c3 10))
-    (bind ?res (* ?avg-cf ?rule-cf))
-    (bind ?cnew (max-certainty ?cur-c ?res))
-    (modify ?f (certainty ?cnew))
-    (assert (sendmessage 
-        (value (str-cat 
-            "ПИЦЦА: [Тесто для пиццы + Соус томатный + Сыр Моцарелла] -> Пицца Маргарита (CF=" ?cnew ")"
-        ))
-    ))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 5 ?c3 10) 1.0))
+    (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
+    (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца (премиум) CF=" ?res))))
 )
 
-; --- ПИЦЦА МАРГАРИТА (Рецепт 2: с Российским сыром) ---
 (defrule make-margherita-budget
+    (declare (salience 10))
     ?tk <- (token (name "t-pizza-budget"))
     (ingredient (name "Тесто для пиццы") (certainty ?c1&:(> ?c1 0.1)))
     (ingredient (name "Соус томатный") (certainty ?c2&:(> ?c2 0.1)))
@@ -185,27 +164,36 @@
     ?f <- (ingredient (name "Пицца Маргарита") (certainty ?cur-c))
     =>
     (retract ?tk)
-    (bind ?rule-cf 0.7)
-    (bind ?avg-cf (weighted-avg ?c1 5 ?c2 5 ?c3 10))
-    (bind ?res (* ?avg-cf ?rule-cf))
-    (bind ?cnew (max-certainty ?cur-c ?res))
-    (modify ?f (certainty ?cnew))
-    (assert (sendmessage 
-        (value (str-cat 
-            "ПИЦЦА: [Тесто для пиццы + Соус томатный + Сыр Российский] -> Пицца Маргарита (CF=" ?cnew ")"
-        ))
-    ))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 5 ?c3 10) 0.7))
+    (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
+    (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца (бюджет) CF=" ?res))))
+)
+; ====================================================
+; 5. ЭТАП 3: ФОРМИРОВАНИЕ ОТЧЕТА (Исправлено)
+; ====================================================
+
+
+(defrule print-report-header
+    (declare (salience -5))
+    ?tk <- (token (name "t-header"))
+    =>
+    (retract ?tk)
+    (assert (sendmessage (value "--------------------------")))
+    (assert (sendmessage (value "--- ФИНАЛЬНЫЙ ОТЧЕТ ---")))
 )
 
-; ====================================================
-; 4. ВЫВОД СООБЩЕНИЙ В ПРОКСИ
-; ====================================================
+(defrule generate-final-report
+    (declare (salience -10))
+    (ingredient (name ?name) (certainty ?c&:(> ?c 0.0)) (type result))
+    =>
+    (assert (sendmessage (value (str-cat "ИТОГО: " ?name " (CF=" ?c ")"))))
+)
 
 (defrule collect-messages-to-proxy
-   (declare (salience -10)) ; Низкий приоритет, сработает в конце
-   ?msg <- (sendmessage (value ?text))
-   ?proxy <- (ioproxy (messages $?current-msgs))
-   =>
-   (modify ?proxy (messages $?current-msgs ?text))
-   (retract ?msg)
+    (declare (salience -100)) 
+    ?msg <- (sendmessage (value ?text))
+    ?proxy <- (ioproxy (messages $?current-msgs))
+    =>
+    (modify ?proxy (messages $?current-msgs ?text))
+    (retract ?msg)
 )
