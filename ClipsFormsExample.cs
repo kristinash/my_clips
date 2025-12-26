@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+
 namespace ClipsFormsExample
 {
     public partial class ClipsFormsExample : Form
@@ -18,11 +19,13 @@ namespace ClipsFormsExample
         private bool isEditing = false;
         private CultureInfo invariantCulture = CultureInfo.InvariantCulture;
         private CultureInfo uiCulture = CultureInfo.CurrentUICulture;
+
         public ClipsFormsExample()
         {
             InitializeComponent();
             SetupListViews();
         }
+
         private void SetupListViews()
         {
             listView1.View = View.Details;
@@ -37,7 +40,7 @@ namespace ClipsFormsExample
             listView2.Columns.Add("Блюдо / Продукт", 180);
             listView2.Columns.Add("Уверенность (CF)", 110);
         }
-        #region Вспомогательные методы
+
         private string DecodeClipsString(string text)
         {
             if (string.IsNullOrEmpty(text)) return "";
@@ -48,20 +51,24 @@ namespace ClipsFormsExample
             }
             catch { return text; }
         }
+
         private string CleanTextContent(string text)
         {
             if (string.IsNullOrEmpty(text)) return text;
             if (text.StartsWith("\ufeff")) text = text.Substring(1);
             return Regex.Replace(text, @"[\u0000-\u0008\u000B\u000C\u000E-\u001F]", "");
         }
+
         private string ToClipsNumberString(double value)
         {
             return value.ToString("F6", invariantCulture);
         }
+
         private string ToDisplayNumberString(double value)
         {
             return value.ToString("F2", uiCulture);
         }
+
         private double ParseNumberString(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return 1.0;
@@ -72,8 +79,7 @@ namespace ClipsFormsExample
             }
             return 1.0;
         }
-        #endregion
-        #region Обработка файлов
+
         private void openFile_Click(object sender, EventArgs e)
         {
             clipsOpenFileDialog.Multiselect = true;
@@ -105,6 +111,7 @@ namespace ClipsFormsExample
                 }
             }
         }
+
         private void ParseClipsFile(string text)
         {
             listView1.Items.Clear();
@@ -124,8 +131,7 @@ namespace ClipsFormsExample
                 listView1.Items.Add(lvi1);
             }
         }
-        #endregion
-        #region Логика работы с CLIPS
+
         private void nextBtn_Click(object sender, EventArgs e)
         {
             if (loadedFilePaths.Count == 0)
@@ -147,17 +153,17 @@ namespace ClipsFormsExample
                     {
                         string name = item.Text;
                         double cf = ingredientCFValues.ContainsKey(name) ? ingredientCFValues[name] : 1.0;
-                        clips.Eval($"(assert (input-question (name \"{name}\") (certainty {ToClipsNumberString(cf)})))");
+                        clips.AssertString($"(input-question (name \"{name}\") (certainty {ToClipsNumberString(cf)}))");
                     }
                 }
-                clips.Run();
-                ShowProxyLogs();
+                ExecuteEngine();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("ОШИБКА: " + ex.Message);
             }
         }
+
         private void ShowProxyLogs()
         {
             outputBox.Clear();
@@ -183,6 +189,7 @@ namespace ClipsFormsExample
                 outputBox.ScrollToCaret();
             }
         }
+
         private void UpdateResultsTable(List<string> finalLogs)
         {
             listView2.Items.Clear();
@@ -193,10 +200,7 @@ namespace ClipsFormsExample
                 {
                     string name = match.Groups[1].Value.Trim();
                     string cfString = match.Groups[2].Value.Trim();
-                    double.TryParse(cfString.Replace(',', '.'),
-                                    NumberStyles.Any,
-                                    CultureInfo.InvariantCulture,
-                                    out double cfValue);
+                    double.TryParse(cfString.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double cfValue);
                     ListViewItem item = new ListViewItem(name);
                     item.SubItems.Add(cfValue.ToString("F2", uiCulture));
                     if (cfValue >= 0.8) item.BackColor = Color.LightGreen;
@@ -206,8 +210,7 @@ namespace ClipsFormsExample
                 }
             }
         }
-        #endregion
-        #region Интерфейсные события (Редактирование CF)
+
         private void listView1_ItemCheck(object sender, ItemCheckEventArgs e)
         {
             this.BeginInvoke(new MethodInvoker(() => {
@@ -226,6 +229,63 @@ namespace ClipsFormsExample
                 }
             }));
         }
+
+        private void ExecuteEngine()
+        {
+            clips.Run();
+            var matches = (MultifieldValue)clips.Eval("(find-all-facts ((?f ioproxy)) TRUE)");
+            if (matches.Count > 0)
+            {
+                FactAddressValue proxy = (FactAddressValue)matches[0];
+                if (proxy.GetSlotValue("mode").ToString() == "1")
+                {
+                    string askKey = proxy.GetSlotValue("current-ask").ToString().Trim('"');
+                    MultifieldValue msgs = (MultifieldValue)proxy.GetSlotValue("messages");
+                    string message = DecodeClipsString(msgs[msgs.Count - 1].ToString().Trim('"'));
+                    MultifieldValue ansOptions = (MultifieldValue)proxy.GetSlotValue("answers");
+                    double cf = 0.0;
+                    if (askKey == "MOOD_QUESTION")
+                    {
+                        string prompt = $"{message}\n\nДа — {DecodeClipsString(ansOptions[0].ToString().Trim('"'))} (+0.1)\nНет — {DecodeClipsString(ansOptions[1].ToString().Trim('"'))} (0.0)";
+                        DialogResult res = MessageBox.Show(prompt, "Ваше настроение", MessageBoxButtons.YesNo);
+                        cf = (res == DialogResult.Yes) ? 1.0 : 0.0;
+                    }
+                    else
+                    {
+                        DialogResult res = MessageBox.Show(message, "Вопрос системы", MessageBoxButtons.YesNoCancel);
+                        if (res == DialogResult.Yes) cf = 1.0;
+                        else if (res == DialogResult.No) cf = -1.0;
+                        else cf = 0.0;
+                        UpdateListViewFromAnswer(askKey, cf);
+                    }
+                    clips.AssertString($"(input-question (name \"{askKey}\") (certainty {ToClipsNumberString(cf)}))");
+                    clips.Eval($"(modify {proxy.FactIndex} (mode 0))");
+                    ExecuteEngine();
+                }
+                else
+                {
+                    ShowProxyLogs();
+                }
+            }
+            else
+            {
+                ShowProxyLogs();
+            }
+        }
+
+        private void UpdateListViewFromAnswer(string name, double cf)
+        {
+            foreach (ListViewItem item in listView1.Items)
+            {
+                if (item.Text == name)
+                {
+                    item.Checked = (cf > 0);
+                    item.SubItems[1].Text = ToDisplayNumberString(cf);
+                    break;
+                }
+            }
+        }
+
         private void listView1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             ListViewHitTestInfo hit = listView1.HitTest(e.Location);
@@ -256,6 +316,7 @@ namespace ClipsFormsExample
                 };
             }
         }
+
         private void FinalizeEdit(TextBox tb, ListViewItem item)
         {
             if (!listView1.Controls.Contains(tb)) return;
@@ -264,12 +325,14 @@ namespace ClipsFormsExample
             item.SubItems[1].Text = ToDisplayNumberString(val);
             AbortEdit(tb);
         }
+
         private void AbortEdit(TextBox tb)
         {
             listView1.Controls.Remove(tb);
             tb.Dispose();
             isEditing = false;
         }
+
         private void resetBtn_Click(object sender, EventArgs e)
         {
             foreach (ListViewItem item in listView1.Items)
@@ -281,6 +344,7 @@ namespace ClipsFormsExample
             listView2.Items.Clear();
             outputBox.Clear();
         }
+
         private void saveAsButton_Click(object sender, EventArgs e)
         {
             if (clipsSaveFileDialog.ShowDialog() == DialogResult.OK)
@@ -288,6 +352,5 @@ namespace ClipsFormsExample
                 File.WriteAllText(clipsSaveFileDialog.FileName, codeBox.Text, Encoding.UTF8);
             }
         }
-        #endregion
     }
 }
