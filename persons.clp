@@ -19,18 +19,15 @@
     (slot type (default raw)) 
 )
 
-(deftemplate token 
-    (slot name)
-)
-
 (deftemplate sendmessage 
     (slot value)
 )
 
+; Функция максимума с ограничением до 1.0
 (deffunction max-certainty (?old-cf ?new-cf)
-   (if (> ?new-cf ?old-cf) 
-       then ?new-cf 
-       else ?old-cf)
+   (min 1.0 (if (> ?new-cf ?old-cf) 
+                then ?new-cf 
+                else ?old-cf))
 )
 
 (deffunction weighted-avg ($?data)
@@ -54,6 +51,7 @@
 
 (deffacts initial-data
     (ioproxy (fact-id 112))
+    
     ; Обычные ингредиенты
     (ingredient (name "Мука пшеничная"))
     (ingredient (name "Вода"))
@@ -66,18 +64,11 @@
     (ingredient (name "Масло оливковое"))
     (ingredient (name "Сыр Моцарелла"))
     (ingredient (name "Сыр Российский"))
-    
-    ; Теперь они без "type result", чтобы C# их увидел
+
+    ; Итоговые продукты
     (ingredient (name "Тесто для пиццы"))
     (ingredient (name "Соус томатный"))
     (ingredient (name "Пицца Маргарита"))
-    
-    (token (name "t-dough-std"))
-    (token (name "t-sauce-fresh")) 
-    (token (name "t-sauce-fast"))
-    (token (name "t-pizza-premium")) 
-    (token (name "t-pizza-budget"))
-    (token (name "t-header"))
 )
 
 ; ====================================================
@@ -99,30 +90,28 @@
 
 (defrule make-pizza-dough-std
     (declare (salience 10))
-    ?tk <- (token (name "t-dough-std"))
     (ingredient (name "Мука пшеничная") (certainty ?c1&:(> ?c1 0.1)))
     (ingredient (name "Вода") (certainty ?c2&:(> ?c2 0.1)))
     (ingredient (name "Дрожжи") (certainty ?c3&:(> ?c3 0.1)))
     (ingredient (name "Соль") (certainty ?c4&:(> ?c4 0.1)))
     ?f <- (ingredient (name "Тесто для пиццы") (certainty ?cur-c))
+    ; Сработать только если результат улучшится
+    (test (> (* (weighted-avg ?c1 10 ?c2 2 ?c3 2 ?c4 1) 0.95) ?cur-c))
     =>
-    (retract ?tk)
     (bind ?res (* (weighted-avg ?c1 10 ?c2 2 ?c3 2 ?c4 1) 0.95))
-    ; Здесь мы добавляем (type result)
     (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
     (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто (стандарт) CF=" ?res))))
 )
 
 (defrule make-sauce-fresh
     (declare (salience 10))
-    ?tk <- (token (name "t-sauce-fresh"))
     (ingredient (name "Томаты") (certainty ?c1&:(> ?c1 0.1)))
     (ingredient (name "Чеснок") (certainty ?c2&:(> ?c2 0.1)))
     (ingredient (name "Базилик") (certainty ?c3&:(> ?c3 0.1)))
     (ingredient (name "Масло оливковое") (certainty ?c4&:(> ?c4 0.1)))
     ?f <- (ingredient (name "Соус томатный") (certainty ?cur-c))
+    (test (> (* (weighted-avg ?c1 10 ?c2 1 ?c3 1 ?c4 3) 1.0) ?cur-c))
     =>
-    (retract ?tk)
     (bind ?res (* (weighted-avg ?c1 10 ?c2 1 ?c3 1 ?c4 3) 1.0))
     (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
     (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус (свежий) CF=" ?res))))
@@ -130,12 +119,11 @@
 
 (defrule make-sauce-fast
     (declare (salience 10))
-    ?tk <- (token (name "t-sauce-fast"))
     (ingredient (name "Томатная паста") (certainty ?c1&:(> ?c1 0.1)))
     (ingredient (name "Вода") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Соус томатный") (certainty ?cur-c))
+    (test (> (* (weighted-avg ?c1 10 ?c2 5) 0.6) ?cur-c))
     =>
-    (retract ?tk)
     (bind ?res (* (weighted-avg ?c1 10 ?c2 5) 0.6))
     (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
     (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус (быстрый) CF=" ?res))))
@@ -143,13 +131,12 @@
 
 (defrule make-margherita-premium
     (declare (salience 10))
-    ?tk <- (token (name "t-pizza-premium"))
     (ingredient (name "Тесто для пиццы") (certainty ?c1&:(> ?c1 0.1)))
     (ingredient (name "Соус томатный") (certainty ?c2&:(> ?c2 0.1)))
     (ingredient (name "Сыр Моцарелла") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Пицца Маргарита") (certainty ?cur-c))
+    (test (> (* (weighted-avg ?c1 5 ?c2 5 ?c3 10) 1.0) ?cur-c))
     =>
-    (retract ?tk)
     (bind ?res (* (weighted-avg ?c1 5 ?c2 5 ?c3 10) 1.0))
     (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
     (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца (премиум) CF=" ?res))))
@@ -157,27 +144,42 @@
 
 (defrule make-margherita-budget
     (declare (salience 10))
-    ?tk <- (token (name "t-pizza-budget"))
     (ingredient (name "Тесто для пиццы") (certainty ?c1&:(> ?c1 0.1)))
     (ingredient (name "Соус томатный") (certainty ?c2&:(> ?c2 0.1)))
     (ingredient (name "Сыр Российский") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Пицца Маргарита") (certainty ?cur-c))
+    (test (> (* (weighted-avg ?c1 5 ?c2 5 ?c3 10) 0.7) ?cur-c))
     =>
-    (retract ?tk)
     (bind ?res (* (weighted-avg ?c1 5 ?c2 5 ?c3 10) 0.7))
     (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
     (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца (бюджет) CF=" ?res))))
 )
-; ====================================================
-; 5. ЭТАП 3: ФОРМИРОВАНИЕ ОТЧЕТА (Исправлено)
-; ====================================================
 
+(defrule make-sauce-fast-CYCLE
+    (declare (salience 10))
+    (ingredient (name "Томатная паста") (certainty ?c1))
+    (ingredient (name "Вода") (certainty ?c2))
+    ?f <- (ingredient (name "Соус томатный") (certainty ?cur-c))
+    (test (> (max-certainty ?cur-c (+ ?cur-c 0.1)) ?cur-c))
+    =>
+    (bind ?new-val (max-certainty ?cur-c (+ ?cur-c 0.1))) 
+    (modify ?f (certainty ?new-val) (type result))
+    ; ДОБАВЬТЕ ЭТУ СТРОКУ:
+    (printout t "DEBUG: Соус вырос до " ?new-val crlf)
+    (assert (sendmessage (value (str-cat "ДЕЙСТВИЕ: Соус вырос до " ?new-val))))
+)
+
+; ====================================================
+; 5. ЭТАП 3: ФОРМИРОВАНИЕ ОТЧЕТА
+; ====================================================
 
 (defrule print-report-header
     (declare (salience -5))
-    ?tk <- (token (name "t-header"))
+    ; Печатаем заголовок один раз, если есть хотя бы один результат
+    (exists (ingredient (type result)))
+    (not (header-done))
     =>
-    (retract ?tk)
+    (assert (header-done))
     (assert (sendmessage (value "--------------------------")))
     (assert (sendmessage (value "--- ФИНАЛЬНЫЙ ОТЧЕТ ---")))
 )
