@@ -55,10 +55,15 @@ namespace ClipsFormsExample
         private string CleanTextContent(string text)
         {
             if (string.IsNullOrEmpty(text)) return text;
-            if (text.StartsWith("\ufeff")) text = text.Substring(1);
+
+            // Удаляем только невидимый символ BOM, если он есть в начале
+            // \uFEFF — это Byte Order Mark
+            text = text.TrimStart('\uFEFF');
+
+            // Очищаем только специфические "мусорные" символы, 
+            // не трогая пробелы, табуляцию и переносы строк
             return Regex.Replace(text, @"[\u0000-\u0008\u000B\u000C\u000E-\u001F]", "");
         }
-
         private string ToClipsNumberString(double value)
         {
             return value.ToString("F6", invariantCulture);
@@ -142,11 +147,24 @@ namespace ClipsFormsExample
             try
             {
                 clips.Clear();
-                foreach (string filePath in loadedFilePaths)
+
+                // 1. Сортируем файлы так, чтобы basic.clp был первым, а facts.clp вторым
+                var sortedFiles = loadedFilePaths.OrderBy(path => {
+                    string fileName = Path.GetFileName(path).ToLower();
+                    if (fileName == "basic.clp") return 1;
+                    if (fileName == "facts.clp") return 2;
+                    return 3; // Остальные (rules.clp и т.д.)
+                }).ToList();
+
+                // 2. Загружаем файлы в правильном порядке
+                foreach (string filePath in sortedFiles)
                 {
                     clips.Load(filePath);
                 }
+
                 clips.Reset();
+
+                // 3. Передаем данные из UI
                 foreach (ListViewItem item in listView1.Items)
                 {
                     if (item.Checked)
@@ -156,11 +174,12 @@ namespace ClipsFormsExample
                         clips.AssertString($"(input-question (name \"{name}\") (certainty {ToClipsNumberString(cf)}))");
                     }
                 }
+
                 ExecuteEngine();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("ОШИБКА: " + ex.Message);
+                MessageBox.Show("ОШИБКА ПРИ ЗАГРУЗКЕ: " + ex.Message);
             }
         }
 
