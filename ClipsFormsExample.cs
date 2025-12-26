@@ -32,12 +32,12 @@ namespace ClipsFormsExample
             listView1.CheckBoxes = true;
             listView1.FullRowSelect = true;
             listView1.Columns.Clear();
-            listView1.Columns.Add("Ингредиент", 150);
+            listView1.Columns.Add("Ингредиент", 100);
             listView1.Columns.Add("Уверенность (-1...1)", 120);
             listView2.View = View.Details;
             listView2.FullRowSelect = true;
             listView2.Columns.Clear();
-            listView2.Columns.Add("Блюдо / Продукт", 180);
+            listView2.Columns.Add("Блюдо / Продукт", 100);
             listView2.Columns.Add("Уверенность (CF)", 110);
         }
 
@@ -122,21 +122,24 @@ namespace ClipsFormsExample
             listView1.Items.Clear();
             listView2.Items.Clear();
             ingredientCFValues.Clear();
+
             var matches = Regex.Matches(text, @"\(ingredient\s+\(name\s+""([^""]+)""\)", RegexOptions.IgnoreCase);
             var uniqueNames = new HashSet<string>();
+
             foreach (Match match in matches)
             {
-                uniqueNames.Add(match.Groups[1].Value);
-            }
-            foreach (var name in uniqueNames)
-            {
+                string name = match.Groups[1].Value;
+                uniqueNames.Add(name);
+
+                // Устанавливаем CF = 1.0 в словаре
                 ingredientCFValues[name] = 1.0;
+
+                // Добавляем в ListView
                 var lvi1 = new ListViewItem(name);
                 lvi1.SubItems.Add("");
                 listView1.Items.Add(lvi1);
             }
         }
-
         private void nextBtn_Click(object sender, EventArgs e)
         {
             if (loadedFilePaths.Count == 0)
