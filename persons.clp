@@ -1,6 +1,4 @@
-; ====================================================
-; 1. ШАБЛОНЫ И ФУНКЦИИ
-; ====================================================
+
 
 (deftemplate input-question 
     (slot name) 
@@ -9,14 +7,20 @@
 
 (deftemplate ioproxy 
     (slot fact-id) 
-    (multislot messages) 
-    (slot mode (default 0))
+    (slot mode (default 0))          
+    (slot current-ask (default none)) 
+    (multislot messages)             
+    (multislot answers)               
 )
 
 (deftemplate ingredient 
     (slot name) 
     (slot certainty (default 0.0)) 
     (slot type (default raw)) 
+)
+
+(deftemplate mood-factor
+    (slot value (type NUMBER) (default 0.0))
 )
 
 (deftemplate sendmessage 
@@ -45,14 +49,10 @@
        else 0.0)
 )
 
-; ====================================================
-; 2. НАЧАЛЬНЫЕ ДАННЫЕ
-; ====================================================
 
 (deffacts initial-data
     (ioproxy (fact-id 112))
     
-    ; Обычные ингредиенты
     (ingredient (name "Мука пшеничная"))
     (ingredient (name "Вода"))
     (ingredient (name "Дрожжи"))
@@ -65,16 +65,39 @@
     (ingredient (name "Сыр Моцарелла"))
     (ingredient (name "Сыр Российский"))
 
-    ; Итоговые продукты
     (ingredient (name "Тесто для пиццы"))
     (ingredient (name "Соус томатный"))
     (ingredient (name "Пицца Маргарита"))
 )
 
-; ====================================================
-; 3. ЭТАП 1: ОБРАБОТКА ВВОДА (Salience 100)
-; ====================================================
 
+; Правило спрашивает про настроение в самом начале
+(defrule ask-user-mood
+   (declare (salience 150))
+   ?proxy <- (ioproxy (mode 0))
+   (not (mood-factor))
+   =>
+   (modify ?proxy 
+       (mode 1)
+       (current-ask "MOOD_QUESTION")
+       (messages (create$ "Какое у вас сегодня настроение?"))
+       (answers (create$ "Хорошее" "Плохое")))
+)
+
+; Обработка ответа про настроение
+(defrule handle-mood-answer
+   (declare (salience 200))
+   ?q <- (input-question (name "MOOD_QUESTION") (certainty ?val))
+   ?proxy <- (ioproxy (current-ask "MOOD_QUESTION"))
+   =>
+   (bind ?bonus (if (> ?val 0) then 0.1 else -0.1))
+   (assert (mood-factor (value ?bonus)))
+   ; Важно: сбрасываем mode в 0 и очищаем ключ вопроса
+   (modify ?proxy (mode 0) (current-ask none))
+   (retract ?q)
+)
+
+; Сопоставление ингредиентов, выбранных в ListView
 (defrule match-ingredients
     (declare (salience 100))
     ?f <- (ingredient (name ?name))
@@ -84,9 +107,6 @@
     (retract ?q)
 )
 
-; ====================================================
-; 4. ЭТАП 2: ЛОГИКА ПРИГОТОВЛЕНИЯ (Оптимизированная)
-; ====================================================
 
 (defrule make-pizza-dough-std
     (declare (salience 10))
@@ -96,9 +116,7 @@
     (ingredient (name "Соль") (certainty ?c4&:(> ?c4 0.1)))
     ?f <- (ingredient (name "Тесто для пиццы") (certainty ?cur-c))
     =>
-    ; 1. Считаем один раз
     (bind ?res (* (weighted-avg ?c1 10 ?c2 2 ?c3 2 ?c4 1) 0.95))
-    ; 2. Сравниваем и обновляем
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
         (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто (стандарт) CF=" ?res))))
@@ -162,13 +180,8 @@
 )
 
 
-; ====================================================
-; 5. ЭТАП 3: ФОРМИРОВАНИЕ ОТЧЕТА
-; ====================================================
-
 (defrule print-report-header
     (declare (salience -5))
-    ; Печатаем заголовок один раз, если есть хотя бы один результат
     (exists (ingredient (type result)))
     (not (header-done))
     =>
@@ -180,8 +193,10 @@
 (defrule generate-final-report
     (declare (salience -10))
     (ingredient (name ?name) (certainty ?c&:(> ?c 0.0)) (type result))
+    (mood-factor (value ?m))
     =>
-    (assert (sendmessage (value (str-cat "ИТОГО: " ?name " (CF=" ?c ")"))))
+    (bind ?final-cf (max 0.0 (min 1.0 (+ ?c ?m))))
+    (assert (sendmessage (value (str-cat "ИТОГО: " ?name " (CF=" ?final-cf ") [Настроение: " ?m "]"))))
 )
 
 (defrule collect-messages-to-proxy
