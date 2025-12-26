@@ -172,7 +172,7 @@ namespace ClipsFormsExample
                 {
                     allMessages.Add(DecodeClipsString(msgs[i].ToString().Trim('"')));
                 }
-                var processLogs = allMessages.Where(m => m.Contains("ПРОЦЕСС")).ToList();
+                var processLogs = allMessages.Where(m => m.Contains("ПРОЦЕСС") || m.Contains("ЦИКЛ") || m.Contains("ДЕЙСТВИЕ")).ToList();
                 var headerLogs = allMessages.Where(m => m.Contains("---") || m.Contains("ОТЧЕТ")).ToList();
                 var finalResults = allMessages.Where(m => m.StartsWith("ИТОГО")).ToList();
                 foreach (var log in processLogs) outputBox.AppendText("  [Действие] " + log + "\r\n");
