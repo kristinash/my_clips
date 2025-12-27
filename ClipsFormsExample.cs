@@ -8,7 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using System.Speech.Synthesis; // Необходима ссылка на System.Speech в проекте
+using Microsoft.Speech.Recognition;
+using System.Threading.Tasks;
+using System.Media;
 
 namespace ClipsFormsExample
 {
@@ -21,32 +23,68 @@ namespace ClipsFormsExample
         private CultureInfo invariantCulture = CultureInfo.InvariantCulture;
         private CultureInfo uiCulture = CultureInfo.CurrentUICulture;
 
-        // Поля для озвучки
-        private SpeechSynthesizer synth = new SpeechSynthesizer();
         private bool isVoiceEnabled = false;
+        private Microsoft.Speech.Recognition.SpeechRecognitionEngine recog;
+        private string[] basicCommands = { "да", "нет", "открыть", "дальше", "рестарт" };
 
         public ClipsFormsExample()
         {
             InitializeComponent();
             SetupListViews();
-            SetupRussianVoice();
+            InitRecognition();
         }
 
-        private void SetupRussianVoice()
+        private void InitRecognition()
         {
-            try
-            {
-                // Поиск русского голоса
-                var russianVoice = synth.GetInstalledVoices()
-                    .FirstOrDefault(v => v.VoiceInfo.Culture.Name.Contains("ru-RU"));
-                if (russianVoice != null)
+            recog = new Microsoft.Speech.Recognition.SpeechRecognitionEngine(new CultureInfo("ru-RU"));
+            UpdateGrammar(new List<string>());
+            recog.SetInputToDefaultAudioDevice();
+
+            recog.SpeechRecognized += async (s, e) => {
+                if (!isVoiceEnabled) return;
+
+                SystemSounds.Asterisk.Play();
+
+                string command = e.Result.Text;
+                string lowerCmd = command.ToLower();
+
+                if (lowerCmd == "да" || lowerCmd == "нет") await Task.Delay(400);
+
+                switch (lowerCmd)
                 {
-                    synth.SelectVoice(russianVoice.VoiceInfo.Name);
+                    case "да": SendKeys.SendWait("{ENTER}"); return;
+                    case "нет":
+                        SendKeys.SendWait("{RIGHT}");
+                        await Task.Delay(150);
+                        SendKeys.SendWait("{ENTER}");
+                        return;
+                    case "открыть": this.Invoke(new MethodInvoker(() => openFile_Click(this, EventArgs.Empty))); return;
+                    case "дальше": this.Invoke(new MethodInvoker(() => nextBtn_Click(this, EventArgs.Empty))); return;
+                    case "рестарт": this.Invoke(new MethodInvoker(() => resetBtn_Click(this, EventArgs.Empty))); return;
                 }
-                synth.Rate = 1; // Скорость речи (от -10 до 10)
-                synth.Volume = 100;
-            }
-            catch { /* Игнорируем ошибки инициализации голоса */ }
+
+                this.Invoke(new MethodInvoker(() => {
+                    foreach (ListViewItem item in listView1.Items)
+                    {
+                        if (item.Text.Equals(command, StringComparison.OrdinalIgnoreCase))
+                        {
+                            item.Checked = !item.Checked;
+                            break;
+                        }
+                    }
+                }));
+            };
+        }
+
+        private void UpdateGrammar(List<string> additionalWords)
+        {
+            Choices choices = new Choices();
+            choices.Add(basicCommands);
+            if (additionalWords.Count > 0) choices.Add(additionalWords.ToArray());
+            GrammarBuilder gb = new GrammarBuilder { Culture = new CultureInfo("ru-RU") };
+            gb.Append(choices);
+            recog.UnloadAllGrammars();
+            recog.LoadGrammar(new Grammar(gb));
         }
 
         private void SetupListViews()
@@ -55,52 +93,14 @@ namespace ClipsFormsExample
             listView1.CheckBoxes = true;
             listView1.FullRowSelect = true;
             listView1.Columns.Clear();
-            listView1.Columns.Add("Ингредиент", 100);
-            listView1.Columns.Add("Уверенность (-1...1)", 120);
+            listView1.Columns.Add("Ингредиент / Блюдо", 250);
+            listView1.Columns.Add("Уверенность (CF)", 120);
+
             listView2.View = View.Details;
             listView2.FullRowSelect = true;
             listView2.Columns.Clear();
-            listView2.Columns.Add("Блюдо / Продукт", 100);
+            listView2.Columns.Add("Блюдо / Продукт", 200);
             listView2.Columns.Add("Уверенность (CF)", 110);
-        }
-
-        private string DecodeClipsString(string text)
-        {
-            if (string.IsNullOrEmpty(text)) return "";
-            try
-            {
-                byte[] bytes = Encoding.Default.GetBytes(text);
-                return Encoding.UTF8.GetString(bytes);
-            }
-            catch { return text; }
-        }
-
-        private string CleanTextContent(string text)
-        {
-            if (string.IsNullOrEmpty(text)) return text;
-            text = text.TrimStart('\uFEFF');
-            return Regex.Replace(text, @"[\u0000-\u0008\u000B\u000C\u000E-\u001F]", "");
-        }
-
-        private string ToClipsNumberString(double value)
-        {
-            return value.ToString("F6", invariantCulture);
-        }
-
-        private string ToDisplayNumberString(double value)
-        {
-            return value.ToString("F2", uiCulture);
-        }
-
-        private double ParseNumberString(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text)) return 1.0;
-            text = text.Trim().Replace(',', '.');
-            if (double.TryParse(text, NumberStyles.Any, invariantCulture, out double result))
-            {
-                return Math.Max(-1.0, Math.Min(1.0, result));
-            }
-            return 1.0;
         }
 
         private void openFile_Click(object sender, EventArgs e)
@@ -108,36 +108,20 @@ namespace ClipsFormsExample
             clipsOpenFileDialog.Multiselect = true;
             if (clipsOpenFileDialog.ShowDialog() == DialogResult.OK)
             {
-                try
+                loadedFilePaths.Clear();
+                loadedFilePaths.AddRange(clipsOpenFileDialog.FileNames);
+                codeBox.Clear();
+                StringBuilder combinedContent = new StringBuilder();
+                foreach (string filePath in loadedFilePaths)
                 {
-                    loadedFilePaths.Clear();
-                    loadedFilePaths.AddRange(clipsOpenFileDialog.FileNames);
-                    codeBox.Clear();
-                    StringBuilder combinedContent = new StringBuilder();
-                    foreach (string filePath in loadedFilePaths)
-                    {
-                        string content = File.ReadAllText(filePath, Encoding.UTF8);
-                        combinedContent.AppendLine($";; --- ФАЙЛ: {Path.GetFileName(filePath)} ---");
-                        combinedContent.AppendLine(CleanTextContent(content));
-                        combinedContent.AppendLine();
-                    }
-                    codeBox.Text = combinedContent.ToString();
-                    ParseClipsFile(codeBox.Text);
-
-                    string status = $"Загружено файлов: {loadedFilePaths.Count}.";
-                    outputBox.Text = status + "\r\n";
-
-                    // Озвучка при загрузке
-                    if (isVoiceEnabled) synth.SpeakAsync(status + " Пожалуйста, выберите ингредиенты.");
-
-                    foreach (var path in loadedFilePaths)
-                        outputBox.AppendText($"- {Path.GetFileName(path)}\r\n");
-                    outputBox.AppendText("\r\nВыберите ингредиенты и настройте CF (двойной клик на число).\r\n");
+                    string content = File.ReadAllText(filePath, Encoding.UTF8);
+                    combinedContent.AppendLine($";; --- ФАЙЛ: {Path.GetFileName(filePath)} ---");
+                    combinedContent.AppendLine(CleanTextContent(content));
+                    combinedContent.AppendLine();
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Ошибка при чтении файлов: " + ex.Message);
-                }
+                codeBox.Text = combinedContent.ToString();
+                ParseClipsFile(codeBox.Text);
+                outputBox.Text = $"Загружено файлов: {loadedFilePaths.Count}.\r\nИспользуйте голос или выберите ингредиенты.\r\n";
             }
         }
 
@@ -154,100 +138,107 @@ namespace ClipsFormsExample
                 if (uniqueNames.Add(name))
                 {
                     ingredientCFValues[name] = 1.0;
-                    var lvi1 = new ListViewItem(name);
-                    lvi1.SubItems.Add("");
-                    listView1.Items.Add(lvi1);
+                    var lvi = new ListViewItem(name);
+                    lvi.SubItems.Add("");
+                    listView1.Items.Add(lvi);
                 }
             }
+            UpdateGrammar(uniqueNames.ToList());
         }
 
         private void nextBtn_Click(object sender, EventArgs e)
         {
-            if (loadedFilePaths.Count == 0)
-            {
-                MessageBox.Show("Загрузите хотя бы один файл .clp!");
-                return;
-            }
-            try
-            {
+            if (loadedFilePaths.Count == 0) return;
+            Task.Run(() => {
                 clips.Clear();
-                var sortedFiles = loadedFilePaths.OrderBy(path => {
-                    string fileName = Path.GetFileName(path).ToLower();
-                    if (fileName == "basic.clp") return 1;
-                    if (fileName == "facts.clp") return 2;
-                    return 3;
-                }).ToList();
-
-                foreach (string filePath in sortedFiles)
-                {
-                    clips.Load(filePath);
-                }
+                var sorted = loadedFilePaths.OrderBy(p => Path.GetFileName(p).ToLower() == "basic.clp" ? 0 : 1).ToList();
+                foreach (string filePath in sorted) clips.Load(filePath);
                 clips.Reset();
 
-                string moodQuestion = "У вас хорошее настроение? Это повлияет на итоговую уверенность.";
-
-                // Озвучка вопроса о настроении
-                if (isVoiceEnabled) synth.SpeakAsync(moodQuestion);
-
-                DialogResult moodRes = MessageBox.Show(
-                    moodQuestion,
-                    "Опрос настроения",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question);
+                string moodMsg = "У вас хорошее настроение?";
+                DialogResult moodRes = (DialogResult)this.Invoke(new Func<DialogResult>(() =>
+                    MessageBox.Show(this, moodMsg, "Настроение", MessageBoxButtons.YesNo, MessageBoxIcon.Question)));
 
                 double moodCf = (moodRes == DialogResult.Yes) ? 1.0 : 0.0;
                 clips.AssertString($"(input-question (name \"MOOD_QUESTION\") (certainty {ToClipsNumberString(moodCf)}))");
 
-                foreach (ListViewItem item in listView1.Items)
-                {
-                    if (item.Checked)
-                    {
-                        string name = item.Text;
-                        double cf = ingredientCFValues.ContainsKey(name) ? ingredientCFValues[name] : 1.0;
-                        clips.AssertString($"(input-question (name \"{name}\") (certainty {ToClipsNumberString(cf)}))");
-                    }
-                }
-                ExecuteEngine();
-            }
-            catch (Exception ex)
+                this.Invoke(new MethodInvoker(() => {
+                    foreach (ListViewItem item in listView1.Items)
+                        if (item.Checked)
+                        {
+                            double val = ingredientCFValues.ContainsKey(item.Text) ? ingredientCFValues[item.Text] : 1.0;
+                            clips.AssertString($"(input-question (name \"{item.Text}\") (certainty {ToClipsNumberString(val)}))");
+                        }
+                }));
+                ExecuteEngineLoop();
+            });
+        }
+
+        private void ExecuteEngineLoop()
+        {
+            clips.Run();
+            var matches = (MultifieldValue)clips.Eval("(find-all-facts ((?f ioproxy)) TRUE)");
+            if (matches.Count > 0)
             {
-                MessageBox.Show("ОШИБКА ПРИ ЗАГРУЗКЕ: " + ex.Message);
+                FactAddressValue proxy = (FactAddressValue)matches[0];
+                if (proxy.GetSlotValue("mode").ToString() == "1")
+                {
+                    string askKey = proxy.GetSlotValue("current-ask").ToString().Trim('"');
+                    MultifieldValue msgs = (MultifieldValue)proxy.GetSlotValue("messages");
+
+                    string message;
+                    if (askKey == "MOOD_QUESTION")
+                    {
+                        message = "Какое у вас сегодня настроение?";
+                    }
+                    else
+                    {
+                        message = DecodeClipsString(msgs[msgs.Count - 1].ToString().Trim('"'));
+                    }
+
+                    DialogResult res = (DialogResult)this.Invoke(new Func<DialogResult>(() =>
+                        MessageBox.Show(this, message, "Вопрос системы", MessageBoxButtons.YesNoCancel)));
+
+                    double cf = (res == DialogResult.Yes) ? 1.0 : (res == DialogResult.No ? -1.0 : 0.0);
+                    if (askKey != "MOOD_QUESTION") this.Invoke(new MethodInvoker(() => UpdateListViewFromAnswer(askKey, cf)));
+
+                    clips.AssertString($"(input-question (name \"{askKey}\") (certainty {ToClipsNumberString(cf)}))");
+                    clips.Eval($"(modify {proxy.FactIndex} (mode 0))");
+                    ExecuteEngineLoop();
+                }
+                else { this.Invoke(new MethodInvoker(() => ShowProxyLogs())); }
             }
+            else { this.Invoke(new MethodInvoker(() => ShowProxyLogs())); }
         }
 
         private void ShowProxyLogs()
         {
             outputBox.Clear();
-            outputBox.AppendText("=== ЛОГ ВЫПОЛНЕНИЯ СИСТЕМЫ ===\r\n\r\n");
+            outputBox.AppendText("=== ОТЧЕТ СИСТЕМЫ ===\r\n\r\n");
             var matches = (MultifieldValue)clips.Eval("(find-all-facts ((?f ioproxy)) TRUE)");
-            if (matches.Count > 0)
+            if (matches.Count == 0) return;
+
+            FactAddressValue proxy = (FactAddressValue)matches[0];
+            MultifieldValue msgs = (MultifieldValue)proxy["messages"];
+            List<string> allMessages = new List<string>();
+
+            for (int i = 0; i < msgs.Count; i++)
             {
-                FactAddressValue proxy = (FactAddressValue)matches[0];
-                MultifieldValue msgs = (MultifieldValue)proxy["messages"];
-                List<string> allMessages = new List<string>();
-                for (int i = 0; i < msgs.Count; i++)
+                string msg = DecodeClipsString(msgs[i].ToString().Trim('"'));
+                if (!msg.Contains("Какое у вас сегодня настроение?"))
                 {
-                    allMessages.Add(DecodeClipsString(msgs[i].ToString().Trim('"')));
+                    allMessages.Add(msg);
                 }
-                var processLogs = allMessages.Where(m => m.Contains("ПРОЦЕСС") || m.Contains("ЦИКЛ") || m.Contains("ДЕЙСТВИЕ")).ToList();
-                var headerLogs = allMessages.Where(m => m.Contains("---") || m.Contains("ОТЧЕТ")).ToList();
-                var finalResults = allMessages.Where(m => m.StartsWith("ИТОГО")).ToList();
-                foreach (var log in processLogs) outputBox.AppendText("  [Действие] " + log + "\r\n");
-                foreach (var log in headerLogs) outputBox.AppendText(log + "\r\n");
-                foreach (var log in finalResults) outputBox.AppendText("  [Результат] " + log + "\r\n");
-
-                UpdateResultsTable(finalResults);
-
-                // Озвучка результатов
-                if (isVoiceEnabled && finalResults.Any())
-                {
-                    string toSpeak = "Результаты расчёта. " + string.Join(". ", finalResults);
-                    synth.SpeakAsync(toSpeak);
-                }
-
-                outputBox.SelectionStart = outputBox.Text.Length;
-                outputBox.ScrollToCaret();
             }
+
+            var processLogs = allMessages.Where(m => m.Contains("ПРОЦЕСС") || m.Contains("ДЕЙСТВИЕ")).ToList();
+            var finalResults = allMessages.Where(m => m.StartsWith("ИТОГО")).ToList();
+
+            foreach (var log in processLogs) outputBox.AppendText(log + "\r\n");
+            foreach (var log in allMessages.Except(processLogs).Except(finalResults)) outputBox.AppendText(log + "\r\n");
+            foreach (var log in finalResults) outputBox.AppendText("\r\n>>> " + log + "\r\n");
+
+            UpdateResultsTable(finalResults);
         }
 
         private void UpdateResultsTable(List<string> finalLogs)
@@ -259,87 +250,21 @@ namespace ClipsFormsExample
                 if (match.Success)
                 {
                     string name = match.Groups[1].Value.Trim();
-                    string cfString = match.Groups[2].Value.Trim();
-                    double.TryParse(cfString.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double cfValue);
+                    double.TryParse(match.Groups[2].Value.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double cf);
                     ListViewItem item = new ListViewItem(name);
-                    item.SubItems.Add(cfValue.ToString("F2", uiCulture));
-                    if (cfValue >= 0.8) item.BackColor = Color.LightGreen;
-                    else if (cfValue >= 0.5) item.BackColor = Color.LightYellow;
-                    else if (cfValue < 0.2) item.ForeColor = Color.Gray;
+                    item.SubItems.Add(cf.ToString("F2", uiCulture));
+                    if (cf >= 0.8) item.BackColor = Color.LightGreen;
+                    else if (cf >= 0.5) item.BackColor = Color.LightYellow;
+                    else if (cf < 0.2) item.ForeColor = Color.Gray;
                     listView2.Items.Add(item);
                 }
             }
         }
 
-        private void listView1_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            this.BeginInvoke(new MethodInvoker(() => {
-                if (e.Index < listView1.Items.Count)
-                {
-                    ListViewItem item = listView1.Items[e.Index];
-                    if (e.NewValue == CheckState.Checked)
-                    {
-                        double cf = ingredientCFValues.ContainsKey(item.Text) ? ingredientCFValues[item.Text] : 1.0;
-                        item.SubItems[1].Text = ToDisplayNumberString(cf);
-                    }
-                    else
-                    {
-                        item.SubItems[1].Text = "";
-                    }
-                }
-            }));
-        }
-
-        private void ExecuteEngine()
-        {
-            clips.Run();
-            var matches = (MultifieldValue)clips.Eval("(find-all-facts ((?f ioproxy)) TRUE)");
-            if (matches.Count > 0)
-            {
-                FactAddressValue proxy = (FactAddressValue)matches[0];
-                if (proxy.GetSlotValue("mode").ToString() == "1")
-                {
-                    string askKey = proxy.GetSlotValue("current-ask").ToString().Trim('"');
-                    MultifieldValue msgs = (MultifieldValue)proxy.GetSlotValue("messages");
-                    string message = DecodeClipsString(msgs[msgs.Count - 1].ToString().Trim('"'));
-
-                    if (isVoiceEnabled) synth.SpeakAsync(message);
-
-                    double cf = 0.0;
-                    if (askKey == "MOOD_QUESTION")
-                    {
-                        string prompt = $"{message}\n\nДа — Хорошее (+1.0)\nНет — Обычное (0.0)";
-                        DialogResult res = MessageBox.Show(prompt, "Настроение", MessageBoxButtons.YesNo);
-                        cf = (res == DialogResult.Yes) ? 1.0 : 0.0;
-                    }
-                    else
-                    {
-                        DialogResult res = MessageBox.Show(message, "Вопрос системы", MessageBoxButtons.YesNoCancel);
-                        if (res == DialogResult.Yes) cf = 1.0;
-                        else if (res == DialogResult.No) cf = -1.0;
-                        else cf = 0.0;
-                        UpdateListViewFromAnswer(askKey, cf);
-                    }
-                    clips.AssertString($"(input-question (name \"{askKey}\") (certainty {ToClipsNumberString(cf)}))");
-                    clips.Eval($"(modify {proxy.FactIndex} (mode 0))");
-                    ExecuteEngine();
-                }
-                else { ShowProxyLogs(); }
-            }
-            else { ShowProxyLogs(); }
-        }
-
         private void UpdateListViewFromAnswer(string name, double cf)
         {
             foreach (ListViewItem item in listView1.Items)
-            {
-                if (item.Text == name)
-                {
-                    item.Checked = (cf > 0);
-                    item.SubItems[1].Text = ToDisplayNumberString(cf);
-                    break;
-                }
-            }
+                if (item.Text == name) { item.Checked = (cf > 0); item.SubItems[1].Text = ToDisplayNumberString(cf); break; }
         }
 
         private void listView1_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -349,73 +274,59 @@ namespace ClipsFormsExample
             {
                 if (isEditing) return;
                 isEditing = true;
-                Rectangle rect = hit.SubItem.Bounds;
-                TextBox editBox = new TextBox();
-                editBox.Bounds = new Rectangle(rect.Left, rect.Top, rect.Width, rect.Height);
-                editBox.Text = hit.SubItem.Text;
-                editBox.BorderStyle = BorderStyle.FixedSingle;
-                listView1.Controls.Add(editBox);
-                editBox.BringToFront();
-                editBox.Focus();
-                editBox.KeyDown += (s, args) => {
-                    if (args.KeyCode == Keys.Enter) FinalizeEdit(editBox, hit.Item);
-                    if (args.KeyCode == Keys.Escape) { AbortEdit(editBox); }
+                TextBox tb = new TextBox { Bounds = hit.SubItem.Bounds, Text = hit.SubItem.Text, BorderStyle = BorderStyle.FixedSingle };
+                listView1.Controls.Add(tb); tb.Focus();
+                tb.KeyDown += (s, args) => {
+                    if (args.KeyCode == Keys.Enter)
+                    {
+                        double val = ParseNumberString(tb.Text);
+                        ingredientCFValues[hit.Item.Text] = val;
+                        hit.Item.SubItems[1].Text = ToDisplayNumberString(val);
+                        AbortEdit(tb);
+                    }
+                    if (args.KeyCode == Keys.Escape) AbortEdit(tb);
                 };
-                editBox.LostFocus += (s, args) => { FinalizeEdit(editBox, hit.Item); };
+                tb.LostFocus += (s, args) => AbortEdit(tb);
             }
         }
 
-        private void FinalizeEdit(TextBox tb, ListViewItem item)
-        {
-            if (!listView1.Controls.Contains(tb)) return;
-            double val = ParseNumberString(tb.Text);
-            ingredientCFValues[item.Text] = val;
-            item.SubItems[1].Text = ToDisplayNumberString(val);
-            AbortEdit(tb);
-        }
-
-        private void AbortEdit(TextBox tb)
-        {
-            listView1.Controls.Remove(tb);
-            tb.Dispose();
-            isEditing = false;
-        }
+        private void AbortEdit(TextBox tb) { listView1.Controls.Remove(tb); tb.Dispose(); isEditing = false; }
 
         private void resetBtn_Click(object sender, EventArgs e)
         {
-            foreach (ListViewItem item in listView1.Items)
-            {
-                item.Checked = false;
-                item.SubItems[1].Text = "";
-                ingredientCFValues[item.Text] = 1.0;
-            }
-            listView2.Items.Clear();
-            outputBox.Clear();
-            synth.SpeakAsyncCancelAll();
+            foreach (ListViewItem item in listView1.Items) { item.Checked = false; item.SubItems[1].Text = ""; ingredientCFValues[item.Text] = 1.0; }
+            listView2.Items.Clear(); outputBox.Clear();
         }
 
-        private void saveAsButton_Click(object sender, EventArgs e)
+        private void listView1_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            if (clipsSaveFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                File.WriteAllText(clipsSaveFileDialog.FileName, codeBox.Text, Encoding.UTF8);
-            }
+            this.BeginInvoke(new MethodInvoker(() => {
+                if (e.Index < listView1.Items.Count)
+                {
+                    var item = listView1.Items[e.Index];
+                    item.SubItems[1].Text = (e.NewValue == CheckState.Checked) ? ToDisplayNumberString(ingredientCFValues[item.Text]) : "";
+                }
+            }));
         }
 
         private void btnVoice_Click(object sender, EventArgs e)
         {
             isVoiceEnabled = !isVoiceEnabled;
-            if (isVoiceEnabled)
-            {
-                btnVoice.BackColor = Color.LightGreen;
-                if (!string.IsNullOrWhiteSpace(outputBox.Text)) synth.SpeakAsync("Голосовой помощник включен.");
-            }
-            else
-            {
-                btnVoice.BackColor = SystemColors.Control;
-                btnVoice.UseVisualStyleBackColor = true;
-                synth.SpeakAsyncCancelAll();
-            }
+            btnVoice.BackColor = isVoiceEnabled ? Color.LightGreen : SystemColors.Control;
+            if (isVoiceEnabled) recog.RecognizeAsync(RecognizeMode.Multiple);
+            else recog.RecognizeAsyncStop();
         }
+
+        private void saveAsButton_Click(object sender, EventArgs e)
+        {
+            if (clipsSaveFileDialog.ShowDialog() == DialogResult.OK)
+                File.WriteAllText(clipsSaveFileDialog.FileName, codeBox.Text, Encoding.UTF8);
+        }
+
+        private string DecodeClipsString(string t) { try { return Encoding.UTF8.GetString(Encoding.Default.GetBytes(t)); } catch { return t; } }
+        private string CleanTextContent(string t) => Regex.Replace(t.TrimStart('\uFEFF'), @"[\u0000-\u0008\u000B\u000C\u000E-\u001F]", "");
+        private string ToClipsNumberString(double v) => v.ToString("F6", invariantCulture);
+        private string ToDisplayNumberString(double v) => v.ToString("F2", uiCulture);
+        private double ParseNumberString(string t) { t = t.Trim().Replace(',', '.'); return double.TryParse(t, NumberStyles.Any, invariantCulture, out double r) ? Math.Max(-1, Math.Min(1, r)) : 1.0; }
     }
 }
