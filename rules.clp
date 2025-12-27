@@ -1,3 +1,6 @@
+;
+; АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ ПРАВИЛА
+;
 
 (defrule rule-r001
     (declare (salience 10))
@@ -5,10 +8,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Смесь муки и соли") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 2 ?c2 9) 0.52))
+    (bind ?res (* (weighted-avg ?c1 2 ?c2 2) 0.77))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Смесь муки и соли CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Мука пшеничная + Соль йодированная -> Смесь муки и соли (CF=" ?res ")"))))
     )
 )
 
@@ -18,10 +21,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Солевой раствор") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 5 ?c2 6) 0.23))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 9) 0.92))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Солевой раствор CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Вода фильтрованная + Соль йодированная -> Солевой раствор (CF=" ?res ")"))))
     )
 )
 
@@ -31,10 +34,10 @@
     (ingredient (name "Сахар тростниковый") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Сахарный сироп") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 6 ?c2 6) 0.94))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 9) 0.32))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Сахарный сироп CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Вода фильтрованная + Сахар тростниковый -> Сахарный сироп (CF=" ?res ")"))))
     )
 )
 
@@ -44,10 +47,10 @@
     (ingredient (name "Молоко пастеризованное") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Яичная смесь") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 3 ?c2 2) 0.71))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 7) 0.56))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Яичная смесь CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Яйца категории С0 + Молоко пастеризованное -> Яичная смесь (CF=" ?res ")"))))
     )
 )
 
@@ -57,10 +60,10 @@
     (ingredient (name "Масло сливочное") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Молочная основа") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 6 ?c2 5) 0.38))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 7) 0.3))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Молочная основа CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Молоко пастеризованное + Масло сливочное -> Молочная основа (CF=" ?res ")"))))
     )
 )
 
@@ -70,10 +73,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Томатная паста") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 2 ?c2 5) 0.76))
+    (bind ?res (* (weighted-avg ?c1 1 ?c2 10) 0.5))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Томатная паста CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Томаты спелые + Соль йодированная -> Томатная паста (CF=" ?res ")"))))
     )
 )
 
@@ -83,10 +86,10 @@
     (ingredient (name "Масло оливковое") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Чесночная паста") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 2 ?c2 4) 0.77))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 3) 0.35))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Чесночная паста CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Чеснок свежий + Масло оливковое -> Чесночная паста (CF=" ?res ")"))))
     )
 )
 
@@ -97,10 +100,10 @@
     (ingredient (name "Тимьян свежий") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Травяная смесь итальянская") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 8 ?c3 10) 0.28))
+    (bind ?res (* (weighted-avg ?c1 2 ?c2 7 ?c3 3) 0.29))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Травяная смесь итальянская CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Базилик свежий + Орегано сушеный + Тимьян свежий -> Травяная смесь итальянская (CF=" ?res ")"))))
     )
 )
 
@@ -111,10 +114,10 @@
     (ingredient (name "Петрушка кудрявая") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Травяная смесь прованс") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 8 ?c2 10 ?c3 2) 0.76))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 4 ?c3 1) 0.28))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Травяная смесь прованс CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тимьян свежий + Розмарин + Петрушка кудрявая -> Травяная смесь прованс (CF=" ?res ")"))))
     )
 )
 
@@ -125,10 +128,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Маринад базовый") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 1 ?c3 7) 0.83))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 7 ?c3 4) 0.15))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Маринад базовый CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Уксус бальзамический + Лимоны свежие + Соль йодированная -> Маринад базовый (CF=" ?res ")"))))
     )
 )
 
@@ -139,10 +142,10 @@
     (ingredient (name "Лимоны свежие") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Заправка винегрет") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 5 ?c3 6) 0.56))
+    (bind ?res (* (weighted-avg ?c1 3 ?c2 7 ?c3 10) 0.15))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Заправка винегрет CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Масло оливковое + Уксус бальзамический + Лимоны свежие -> Заправка винегрет (CF=" ?res ")"))))
     )
 )
 
@@ -153,10 +156,10 @@
     (ingredient (name "Перец черный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Соусная основа") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 3 ?c2 8 ?c3 6) 0.45))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 4 ?c3 3) 0.4))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соусная основа CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Томатная паста + Соль йодированная + Перец черный -> Соусная основа (CF=" ?res ")"))))
     )
 )
 
@@ -167,10 +170,10 @@
     (ingredient (name "Вода фильтрованная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Кляр жидкий") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 8 ?c2 1 ?c3 1) 0.79))
+    (bind ?res (* (weighted-avg ?c1 3 ?c2 6 ?c3 5) 0.45))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Кляр жидкий CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Мука пшеничная + Яйца категории С0 + Вода фильтрованная -> Кляр жидкий (CF=" ?res ")"))))
     )
 )
 
@@ -181,10 +184,10 @@
     (ingredient (name "Перец черный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Панировка") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 5 ?c2 1 ?c3 1) 0.16))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 10 ?c3 1) 0.43))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Панировка CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Мука пшеничная + Соль йодированная + Перец черный -> Панировка (CF=" ?res ")"))))
     )
 )
 
@@ -195,10 +198,10 @@
     (ingredient (name "Чеснок свежий") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Бульонная основа") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 7 ?c2 5 ?c3 2) 0.27))
+    (bind ?res (* (weighted-avg ?c1 3 ?c2 5 ?c3 9) 0.63))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бульонная основа CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Вода фильтрованная + Лук красный + Чеснок свежий -> Бульонная основа (CF=" ?res ")"))))
     )
 )
 
@@ -209,10 +212,10 @@
     (ingredient (name "Масло сливочное") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Сметанная смесь") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 2 ?c2 8 ?c3 5) 0.22))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 2 ?c3 7) 0.68))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Сметанная смесь CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Молоко пастеризованное + Соль йодированная + Масло сливочное -> Сметанная смесь (CF=" ?res ")"))))
     )
 )
 
@@ -223,10 +226,10 @@
     (ingredient (name "Перец черный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Сырная стружка") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 2 ?c2 1 ?c3 5) 0.15))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 9 ?c3 7) 0.54))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Сырная стружка CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Сыр Моцарелла + Соль йодированная + Перец черный -> Сырная стружка (CF=" ?res ")"))))
     )
 )
 
@@ -237,10 +240,10 @@
     (ingredient (name "Петрушка кудрявая") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Овощная нарезка") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 3 ?c2 10 ?c3 2) 0.5))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 8 ?c3 5) 0.49))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощная нарезка CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Томаты спелые + Лук красный + Петрушка кудрявая -> Овощная нарезка (CF=" ?res ")"))))
     )
 )
 
@@ -251,10 +254,10 @@
     (ingredient (name "Сахар тростниковый") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Фруктовая цедра") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 8 ?c2 6 ?c3 9) 0.25))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 2 ?c3 9) 0.81))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Фруктовая цедра CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Лимоны свежие + Мед цветочный + Сахар тростниковый -> Фруктовая цедра (CF=" ?res ")"))))
     )
 )
 
@@ -265,10 +268,10 @@
     (ingredient (name "Перец черный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Специальная соль") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 3 ?c2 5 ?c3 7) 0.21))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 6 ?c3 1) 0.71))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Специальная соль CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соль йодированная + Чеснок свежий + Перец черный -> Специальная соль (CF=" ?res ")"))))
     )
 )
 
@@ -279,10 +282,10 @@
     (ingredient (name "Вода фильтрованная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Сахарный сироп") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 3 ?c2 3 ?c3 1) 0.93))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 2 ?c3 9) 0.47))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Сахарный сироп CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Сахар тростниковый + Мед цветочный + Вода фильтрованная -> Сахарный сироп (CF=" ?res ")"))))
     )
 )
 
@@ -293,10 +296,10 @@
     (ingredient (name "Перец черный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Яичная смесь") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 1 ?c2 1 ?c3 6) 0.38))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 6 ?c3 9) 0.84))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Яичная смесь CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Яйца категории С0 + Соль йодированная + Перец черный -> Яичная смесь (CF=" ?res ")"))))
     )
 )
 
@@ -307,10 +310,10 @@
     (ingredient (name "Молоко пастеризованное") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Молочная основа") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 7 ?c2 2 ?c3 7) 0.11))
+    (bind ?res (* (weighted-avg ?c1 2 ?c2 3 ?c3 10) 0.99))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Молочная основа CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Масло сливочное + Сахар тростниковый + Молоко пастеризованное -> Молочная основа (CF=" ?res ")"))))
     )
 )
 
@@ -321,10 +324,10 @@
     (ingredient (name "Чеснок свежий") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Томатная паста") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 10 ?c3 2) 0.93))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 3 ?c3 8) 0.98))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Томатная паста CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Томаты спелые + Масло оливковое + Чеснок свежий -> Томатная паста (CF=" ?res ")"))))
     )
 )
 
@@ -335,10 +338,10 @@
     (ingredient (name "Перец черный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Маринад базовый") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 5 ?c2 9 ?c3 1) 0.19))
+    (bind ?res (* (weighted-avg ?c1 1 ?c2 7 ?c3 2) 0.59))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Маринад базовый CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Говядина вырезка + Соль йодированная + Перец черный -> Маринад базовый (CF=" ?res ")"))))
     )
 )
 
@@ -349,10 +352,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Бульонная основа") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 5 ?c2 9 ?c3 6) 0.2))
+    (bind ?res (* (weighted-avg ?c1 1 ?c2 6 ?c3 2) 0.58))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бульонная основа CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Рис басмати + Вода фильтрованная + Соль йодированная -> Бульонная основа (CF=" ?res ")"))))
     )
 )
 
@@ -363,10 +366,10 @@
     (ingredient (name "Масло оливковое") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Овощная нарезка") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 7 ?c2 7 ?c3 10) 0.48))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 6 ?c3 8) 0.99))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощная нарезка CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Лук красный + Чеснок свежий + Масло оливковое -> Овощная нарезка (CF=" ?res ")"))))
     )
 )
 
@@ -377,10 +380,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Специальная соль") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 10 ?c3 5) 0.71))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 6 ?c3 5) 0.35))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Специальная соль CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Перец черный + Орегано сушеный + Соль йодированная -> Специальная соль (CF=" ?res ")"))))
     )
 )
 
@@ -391,10 +394,10 @@
     (ingredient (name "Вода фильтрованная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Заправка винегрет") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 7 ?c2 2 ?c3 5) 0.96))
+    (bind ?res (* (weighted-avg ?c1 1 ?c2 10 ?c3 4) 0.63))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Заправка винегрет CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Лимоны свежие + Сахар тростниковый + Вода фильтрованная -> Заправка винегрет (CF=" ?res ")"))))
     )
 )
 
@@ -405,10 +408,10 @@
     (ingredient (name "Масло оливковое") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Травяная смесь итальянская") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 8 ?c3 5) 0.77))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 7 ?c3 7) 0.74))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Травяная смесь итальянская CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Петрушка кудрявая + Базилик свежий + Масло оливковое -> Травяная смесь итальянская (CF=" ?res ")"))))
     )
 )
 
@@ -419,10 +422,10 @@
     (ingredient (name "Дрожжи сухие") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Тесто дрожжевое базовое") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 7 ?c3 9) 0.74))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 3 ?c3 1) 0.91))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто дрожжевое базовое CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Смесь муки и соли + Вода фильтрованная + Дрожжи сухие -> Тесто дрожжевое базовое (CF=" ?res ")"))))
     )
 )
 
@@ -433,10 +436,10 @@
     (ingredient (name "Вода фильтрованная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Тесто слоеное") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 6 ?c3 2) 0.15))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 10 ?c3 2) 0.47))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто слоеное CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Смесь муки и соли + Масло сливочное + Вода фильтрованная -> Тесто слоеное (CF=" ?res ")"))))
     )
 )
 
@@ -447,10 +450,10 @@
     (ingredient (name "Сахар тростниковый") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Тесто песочное") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 5 ?c2 7 ?c3 8) 0.44))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 6 ?c3 6) 0.52))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто песочное CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Смесь муки и соли + Масло сливочное + Сахар тростниковый -> Тесто песочное (CF=" ?res ")"))))
     )
 )
 
@@ -461,10 +464,10 @@
     (ingredient (name "Перец черный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Соус томатный базовый") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 2 ?c2 2 ?c3 2) 0.73))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 3 ?c3 3) 0.49))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус томатный базовый CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Томатная паста + Чеснок свежий + Перец черный -> Соус томатный базовый (CF=" ?res ")"))))
     )
 )
 
@@ -475,10 +478,10 @@
     (ingredient (name "Масло сливочное") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Соус сырный") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 9 ?c2 10 ?c3 6) 0.24))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 2 ?c3 9) 0.53))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус сырный CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Сырная стружка + Молоко пастеризованное + Масло сливочное -> Соус сырный (CF=" ?res ")"))))
     )
 )
 
@@ -489,10 +492,10 @@
     (ingredient (name "Масло сливочное") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Соус белый") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 8 ?c2 4 ?c3 3) 0.54))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 4 ?c3 1) 0.98))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус белый CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Смесь муки и соли + Молоко пастеризованное + Масло сливочное -> Соус белый (CF=" ?res ")"))))
     )
 )
 
@@ -503,10 +506,10 @@
     (ingredient (name "Чеснок свежий") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Фарш мясной подготовленный") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 2 ?c3 10) 0.79))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 2 ?c3 3) 0.84))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Фарш мясной подготовленный CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Говядина вырезка + Лук красный + Чеснок свежий -> Фарш мясной подготовленный (CF=" ?res ")"))))
     )
 )
 
@@ -517,10 +520,10 @@
     (ingredient (name "Петрушка кудрявая") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Фарш овощной") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 7 ?c2 4 ?c3 3) 0.48))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 3 ?c3 3) 0.19))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Фарш овощной CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Лук красный + Томаты спелые + Петрушка кудрявая -> Фарш овощной (CF=" ?res ")"))))
     )
 )
 
@@ -531,10 +534,10 @@
     (ingredient (name "Лук красный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Бульон куриный процеженный") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 2 ?c2 4 ?c3 2) 0.41))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 1 ?c3 10) 0.53))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бульон куриный процеженный CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бульонная основа + Говядина вырезка + Лук красный -> Бульон куриный процеженный (CF=" ?res ")"))))
     )
 )
 
@@ -545,10 +548,10 @@
     (ingredient (name "Томаты спелые") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Бульон овощной ароматный") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 9 ?c2 9 ?c3 4) 0.7))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 8 ?c3 10) 0.36))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бульон овощной ароматный CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бульонная основа + Лук красный + Томаты спелые -> Бульон овощной ароматный (CF=" ?res ")"))))
     )
 )
 
@@ -559,10 +562,10 @@
     (ingredient (name "Перец черный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Маринад сложный") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 8 ?c2 2 ?c3 4) 0.25))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 6 ?c3 5) 0.89))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Маринад сложный CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Маринад базовый + Чеснок свежий + Перец черный -> Маринад сложный (CF=" ?res ")"))))
     )
 )
 
@@ -573,10 +576,10 @@
     (ingredient (name "Молоко пастеризованное") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Кляр воздушный") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 1 ?c2 5 ?c3 2) 0.61))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 8 ?c3 1) 0.36))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Кляр воздушный CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Кляр жидкий + Яйца категории С0 + Молоко пастеризованное -> Кляр воздушный (CF=" ?res ")"))))
     )
 )
 
@@ -587,10 +590,10 @@
     (ingredient (name "Молоко пастеризованное") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Крем заварной базовый") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 7 ?c3 10) 0.54))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 2 ?c3 5) 0.98))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Крем заварной базовый CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Сахарный сироп + Яйца категории С0 + Молоко пастеризованное -> Крем заварной базовый (CF=" ?res ")"))))
     )
 )
 
@@ -601,10 +604,10 @@
     (ingredient (name "Вода фильтрованная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Глазурь зеркальная") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 8 ?c2 2 ?c3 6) 0.11))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 4 ?c3 5) 0.63))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Глазурь зеркальная CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Сахарный сироп + Сахар тростниковый + Вода фильтрованная -> Глазурь зеркальная (CF=" ?res ")"))))
     )
 )
 
@@ -615,10 +618,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Овощи бланшированные") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 9 ?c2 7 ?c3 7) 0.56))
+    (bind ?res (* (weighted-avg ?c1 8 ?c2 9 ?c3 10) 0.59))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощи бланшированные CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощная нарезка + Масло оливковое + Соль йодированная -> Овощи бланшированные (CF=" ?res ")"))))
     )
 )
 
@@ -629,10 +632,10 @@
     (ingredient (name "Чеснок свежий") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Овощи обжаренные") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 8 ?c2 3 ?c3 7) 0.74))
+    (bind ?res (* (weighted-avg ?c1 1 ?c2 7 ?c3 3) 0.72))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощи обжаренные CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощная нарезка + Масло оливковое + Чеснок свежий -> Овощи обжаренные (CF=" ?res ")"))))
     )
 )
 
@@ -642,10 +645,10 @@
     (ingredient (name "Маринад сложный") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Мясо маринованное") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 9 ?c2 10) 0.16))
+    (bind ?res (* (weighted-avg ?c1 8 ?c2 7) 0.5))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Мясо маринованное CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Говядина вырезка + Маринад сложный -> Мясо маринованное (CF=" ?res ")"))))
     )
 )
 
@@ -655,10 +658,10 @@
     (ingredient (name "Маринад базовый") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Рыба подготовленная") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 8 ?c2 8) 0.8))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 1) 0.42))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Рыба подготовленная CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Говядина вырезка + Маринад базовый -> Рыба подготовленная (CF=" ?res ")"))))
     )
 )
 
@@ -668,10 +671,10 @@
     (ingredient (name "Масло сливочное") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Тесто раскатанное") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 8 ?c2 5) 0.55))
+    (bind ?res (* (weighted-avg ?c1 2 ?c2 2) 0.5))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто раскатанное CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто дрожжевое базовое + Масло сливочное -> Тесто раскатанное (CF=" ?res ")"))))
     )
 )
 
@@ -682,10 +685,10 @@
     (ingredient (name "Яйца категории С0") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Начинка сладкая") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 9 ?c2 6 ?c3 2) 0.72))
+    (bind ?res (* (weighted-avg ?c1 3 ?c2 7 ?c3 2) 0.88))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Начинка сладкая CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Сахар тростниковый + Мед цветочный + Яйца категории С0 -> Начинка сладкая (CF=" ?res ")"))))
     )
 )
 
@@ -696,10 +699,10 @@
     (ingredient (name "Вода фильтрованная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Тесто дрожжевое базовое") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 2 ?c2 2 ?c3 7) 0.45))
+    (bind ?res (* (weighted-avg ?c1 1 ?c2 10 ?c3 4) 0.66))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто дрожжевое базовое CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Смесь муки и соли + Дрожжи сухие + Вода фильтрованная -> Тесто дрожжевое базовое (CF=" ?res ")"))))
     )
 )
 
@@ -710,10 +713,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Соус томатный базовый") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 9 ?c3 10) 0.36))
+    (bind ?res (* (weighted-avg ?c1 8 ?c2 6 ?c3 5) 0.52))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус томатный базовый CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Томатная паста + Травяная смесь итальянская + Соль йодированная -> Соус томатный базовый (CF=" ?res ")"))))
     )
 )
 
@@ -724,10 +727,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Соус сырный") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 7 ?c2 9 ?c3 1) 0.78))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 10 ?c3 8) 0.52))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус сырный CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Сырная стружка + Молочная основа + Соль йодированная -> Соус сырный (CF=" ?res ")"))))
     )
 )
 
@@ -738,10 +741,10 @@
     (ingredient (name "Перец черный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Соус белый") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 6 ?c2 7 ?c3 1) 0.51))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 8 ?c3 1) 0.27))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус белый CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Яичная смесь + Соль йодированная + Перец черный -> Соус белый (CF=" ?res ")"))))
     )
 )
 
@@ -752,10 +755,10 @@
     (ingredient (name "Чеснок свежий") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Фарш для пельменей") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 8 ?c2 2 ?c3 6) 0.71))
+    (bind ?res (* (weighted-avg ?c1 3 ?c2 2 ?c3 2) 0.44))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Фарш для пельменей CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Фарш мясной подготовленный + Специальная соль + Чеснок свежий -> Фарш для пельменей (CF=" ?res ")"))))
     )
 )
 
@@ -766,10 +769,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Начинка овощная") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 2 ?c2 4 ?c3 9) 0.98))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 5 ?c3 10) 0.25))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Начинка овощная CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Фарш овощной + Масло оливковое + Соль йодированная -> Начинка овощная (CF=" ?res ")"))))
     )
 )
 
@@ -780,10 +783,10 @@
     (ingredient (name "Перец черный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Бульон концентрированный") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 9 ?c2 9 ?c3 6) 0.69))
+    (bind ?res (* (weighted-avg ?c1 8 ?c2 4 ?c3 4) 0.17))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бульон концентрированный CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бульон куриный процеженный + Специальная соль + Перец черный -> Бульон концентрированный (CF=" ?res ")"))))
     )
 )
 
@@ -794,10 +797,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Овощи тушеные") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 2 ?c2 9 ?c3 9) 0.21))
+    (bind ?res (* (weighted-avg ?c1 7 ?c2 7 ?c3 1) 0.92))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощи тушеные CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бульон овощной ароматный + Травяная смесь итальянская + Соль йодированная -> Овощи тушеные (CF=" ?res ")"))))
     )
 )
 
@@ -808,10 +811,10 @@
     (ingredient (name "Тимьян свежий") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Маринад пряный") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 2 ?c2 5 ?c3 2) 0.2))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 1 ?c3 7) 0.13))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Маринад пряный CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Маринад сложный + Орегано сушеный + Тимьян свежий -> Маринад пряный (CF=" ?res ")"))))
     )
 )
 
@@ -822,10 +825,10 @@
     (ingredient (name "Яйца категории С0") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Кляр пивной") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 1 ?c2 7 ?c3 10) 0.11))
+    (bind ?res (* (weighted-avg ?c1 3 ?c2 1 ?c3 10) 0.43))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Кляр пивной CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Кляр воздушный + Панировка + Яйца категории С0 -> Кляр пивной (CF=" ?res ")"))))
     )
 )
 
@@ -836,10 +839,10 @@
     (ingredient (name "Вода фильтрованная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Тесто для пиццы выброженное") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 10 ?c3 3) 0.66))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 4 ?c3 4) 0.58))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто для пиццы выброженное CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто дрожжевое базовое + Дрожжи сухие + Вода фильтрованная -> Тесто для пиццы выброженное (CF=" ?res ")"))))
     )
 )
 
@@ -850,10 +853,10 @@
     (ingredient (name "Вода фильтрованная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Тесто для пасты") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 6 ?c2 8 ?c3 1) 0.99))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 3 ?c3 8) 0.14))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто для пасты CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Смесь муки и соли + Яйца категории С0 + Вода фильтрованная -> Тесто для пасты (CF=" ?res ")"))))
     )
 )
 
@@ -864,10 +867,10 @@
     (ingredient (name "Масло оливковое") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Соус томатный ароматный") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 8 ?c2 8 ?c3 7) 0.55))
+    (bind ?res (* (weighted-avg ?c1 7 ?c2 4 ?c3 6) 0.58))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус томатный ароматный CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус томатный базовый + Травяная смесь итальянская + Масло оливковое -> Соус томатный ароматный (CF=" ?res ")"))))
     )
 )
 
@@ -878,10 +881,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Соус бешамель") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 6 ?c2 4 ?c3 2) 0.5))
+    (bind ?res (* (weighted-avg ?c1 2 ?c2 10 ?c3 7) 0.44))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус бешамель CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус белый + Сырная стружка + Соль йодированная -> Соус бешамель (CF=" ?res ")"))))
     )
 )
 
@@ -892,10 +895,10 @@
     (ingredient (name "Лимоны свежие") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Соус голландез") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 5 ?c3 6) 0.2))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 5 ?c3 7) 0.91))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус голландез CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Яичная смесь + Масло сливочное + Лимоны свежие -> Соус голландез (CF=" ?res ")"))))
     )
 )
 
@@ -906,10 +909,10 @@
     (ingredient (name "Чеснок свежий") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Фарш для пельменей") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 9 ?c2 8 ?c3 7) 0.47))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 4 ?c3 6) 0.61))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Фарш для пельменей CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Фарш мясной подготовленный + Лук красный + Чеснок свежий -> Фарш для пельменей (CF=" ?res ")"))))
     )
 )
 
@@ -920,10 +923,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Фарш для котлет") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 3 ?c3 4) 0.85))
+    (bind ?res (* (weighted-avg ?c1 3 ?c2 9 ?c3 2) 0.52))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Фарш для котлет CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Фарш мясной подготовленный + Панировка + Соль йодированная -> Фарш для котлет (CF=" ?res ")"))))
     )
 )
 
@@ -934,10 +937,10 @@
     (ingredient (name "Перец черный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Бульон концентрированный") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 2 ?c3 6) 0.65))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 7 ?c3 8) 0.81))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бульон концентрированный CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бульон куриный процеженный + Чеснок свежий + Перец черный -> Бульон концентрированный (CF=" ?res ")"))))
     )
 )
 
@@ -948,10 +951,10 @@
     (ingredient (name "Орегано сушеный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Маринад пряный") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 1 ?c2 3 ?c3 5) 0.89))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 1 ?c3 7) 0.42))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Маринад пряный CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Маринад сложный + Базилик свежий + Орегано сушеный -> Маринад пряный (CF=" ?res ")"))))
     )
 )
 
@@ -962,10 +965,10 @@
     (ingredient (name "Дрожжи сухие") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Кляр пивной") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 9 ?c2 8 ?c3 10) 0.55))
+    (bind ?res (* (weighted-avg ?c1 8 ?c2 2 ?c3 9) 0.25))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Кляр пивной CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Кляр воздушный + Молоко пастеризованное + Дрожжи сухие -> Кляр пивной (CF=" ?res ")"))))
     )
 )
 
@@ -976,10 +979,10 @@
     (ingredient (name "Масло сливочное") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Крем дипломат") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 6 ?c2 4 ?c3 1) 0.6))
+    (bind ?res (* (weighted-avg ?c1 8 ?c2 1 ?c3 5) 0.79))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Крем дипломат CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Крем заварной базовый + Мед цветочный + Масло сливочное -> Крем дипломат (CF=" ?res ")"))))
     )
 )
 
@@ -990,10 +993,10 @@
     (ingredient (name "Масло сливочное") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Глазурь шоколадная") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 1 ?c2 3 ?c3 8) 0.9))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 4 ?c3 6) 0.87))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Глазурь шоколадная CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Глазурь зеркальная + Сахар тростниковый + Масло сливочное -> Глазурь шоколадная (CF=" ?res ")"))))
     )
 )
 
@@ -1004,10 +1007,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Овощи тушеные") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 3 ?c2 1 ?c3 5) 0.79))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 6 ?c3 4) 0.36))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощи тушеные CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощи бланшированные + Масло оливковое + Соль йодированная -> Овощи тушеные (CF=" ?res ")"))))
     )
 )
 
@@ -1018,10 +1021,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Овощи гриль") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 8 ?c3 3) 0.48))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 8 ?c3 4) 0.19))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощи гриль CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощи обжаренные + Травяная смесь итальянская + Соль йодированная -> Овощи гриль (CF=" ?res ")"))))
     )
 )
 
@@ -1032,10 +1035,10 @@
     (ingredient (name "Яйца категории С0") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Мясо панированное") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 9 ?c2 2 ?c3 4) 0.98))
+    (bind ?res (* (weighted-avg ?c1 8 ?c2 1 ?c3 4) 0.85))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Мясо панированное CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Мясо маринованное + Панировка + Яйца категории С0 -> Мясо панированное (CF=" ?res ")"))))
     )
 )
 
@@ -1046,10 +1049,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Рыба в кляре") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 5 ?c2 7 ?c3 8) 0.64))
+    (bind ?res (* (weighted-avg ?c1 8 ?c2 3 ?c3 10) 0.73))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Рыба в кляре CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Рыба подготовленная + Кляр жидкий + Соль йодированная -> Рыба в кляре (CF=" ?res ")"))))
     )
 )
 
@@ -1059,10 +1062,10 @@
     (ingredient (name "Масло оливковое") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Тесто формованное") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 8 ?c2 3) 0.64))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 6) 0.6))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто формованное CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто раскатанное + Масло оливковое -> Тесто формованное (CF=" ?res ")"))))
     )
 )
 
@@ -1073,10 +1076,10 @@
     (ingredient (name "Чеснок свежий") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Начинка мясная") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 3 ?c2 10 ?c3 5) 0.41))
+    (bind ?res (* (weighted-avg ?c1 7 ?c2 7 ?c3 1) 0.68))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Начинка мясная CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Фарш для пельменей + Лук красный + Чеснок свежий -> Начинка мясная (CF=" ?res ")"))))
     )
 )
 
@@ -1087,10 +1090,10 @@
     (ingredient (name "Петрушка кудрявая") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Начинка овощная") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 5 ?c3 6) 0.52))
+    (bind ?res (* (weighted-avg ?c1 3 ?c2 4 ?c3 10) 0.41))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Начинка овощная CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Фарш овощной + Томаты спелые + Петрушка кудрявая -> Начинка овощная (CF=" ?res ")"))))
     )
 )
 
@@ -1101,10 +1104,10 @@
     (ingredient (name "Молоко пастеризованное") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Основа для десерта") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 6 ?c2 3 ?c3 2) 0.68))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 9 ?c3 6) 0.29))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Основа для десерта CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Начинка сладкая + Яйца категории С0 + Молоко пастеризованное -> Основа для десерта (CF=" ?res ")"))))
     )
 )
 
@@ -1115,10 +1118,10 @@
     (ingredient (name "Сыр Моцарелла") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Основа пиццы готовая") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 7 ?c3 9) 0.51))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 6 ?c3 9) 0.47))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Основа пиццы готовая CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто для пиццы выброженное + Соус томатный ароматный + Сыр Моцарелла -> Основа пиццы готовая (CF=" ?res ")"))))
     )
 )
 
@@ -1129,10 +1132,10 @@
     (ingredient (name "Вода фильтрованная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Паста свежая") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 2 ?c2 4 ?c3 2) 0.56))
+    (bind ?res (* (weighted-avg ?c1 2 ?c2 5 ?c3 5) 0.56))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Паста свежая CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто для пасты + Соль йодированная + Вода фильтрованная -> Паста свежая (CF=" ?res ")"))))
     )
 )
 
@@ -1143,10 +1146,10 @@
     (ingredient (name "Масло оливковое") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Соус для пасты") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 7 ?c2 9 ?c3 2) 0.91))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 7 ?c3 3) 0.89))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус для пасты CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус томатный ароматный + Травяная смесь итальянская + Масло оливковое -> Соус для пасты (CF=" ?res ")"))))
     )
 )
 
@@ -1157,10 +1160,10 @@
     (ingredient (name "Перец черный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Соус для мяса") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 7 ?c2 1 ?c3 5) 0.96))
+    (bind ?res (* (weighted-avg ?c1 7 ?c2 8 ?c3 6) 0.77))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус для мяса CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус бешамель + Чеснок свежий + Перец черный -> Соус для мяса (CF=" ?res ")"))))
     )
 )
 
@@ -1171,10 +1174,10 @@
     (ingredient (name "Яйца категории С0") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Котлеты сырые") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 8 ?c2 2 ?c3 9) 0.89))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 5 ?c3 3) 0.27))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Котлеты сырые CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Фарш для котлет + Панировка + Яйца категории С0 -> Котлеты сырые (CF=" ?res ")"))))
     )
 )
 
@@ -1185,10 +1188,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Гарнир рисовый подготовленный") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 5 ?c2 3 ?c3 2) 0.69))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 5 ?c3 7) 0.93))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Гарнир рисовый подготовленный CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Рис басмати + Бульон концентрированный + Соль йодированная -> Гарнир рисовый подготовленный (CF=" ?res ")"))))
     )
 )
 
@@ -1199,10 +1202,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Овощи для салата") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 3 ?c2 8 ?c3 6) 0.17))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 8 ?c3 4) 0.24))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощи для салата CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощная нарезка + Заправка винегрет + Соль йодированная -> Овощи для салата (CF=" ?res ")"))))
     )
 )
 
@@ -1213,10 +1216,10 @@
     (ingredient (name "Масло оливковое") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Мясо для жарки") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 5 ?c3 2) 0.27))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 8 ?c3 3) 0.6))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Мясо для жарки CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Мясо маринованное + Маринад пряный + Масло оливковое -> Мясо для жарки (CF=" ?res ")"))))
     )
 )
 
@@ -1227,10 +1230,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Рыба для запекания") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 5 ?c2 5 ?c3 8) 0.6))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 3 ?c3 10) 0.51))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Рыба для запекания CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Рыба подготовленная + Кляр пивной + Соль йодированная -> Рыба для запекания (CF=" ?res ")"))))
     )
 )
 
@@ -1241,10 +1244,10 @@
     (ingredient (name "Сахар тростниковый") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Тесто для выпечки") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 6 ?c2 3 ?c3 9) 0.97))
+    (bind ?res (* (weighted-avg ?c1 8 ?c2 7 ?c3 7) 0.84))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто для выпечки CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто формованное + Масло сливочное + Сахар тростниковый -> Тесто для выпечки (CF=" ?res ")"))))
     )
 )
 
@@ -1255,10 +1258,10 @@
     (ingredient (name "Яйца категории С0") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Крем кондитерский") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 9 ?c2 6 ?c3 7) 0.97))
+    (bind ?res (* (weighted-avg ?c1 1 ?c2 4 ?c3 7) 0.38))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Крем кондитерский CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Крем дипломат + Мед цветочный + Яйца категории С0 -> Крем кондитерский (CF=" ?res ")"))))
     )
 )
 
@@ -1269,10 +1272,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Овощная смесь тушеная") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 7 ?c2 3 ?c3 7) 0.85))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 8 ?c3 3) 0.62))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощная смесь тушеная CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощи тушеные + Масло оливковое + Соль йодированная -> Овощная смесь тушеная (CF=" ?res ")"))))
     )
 )
 
@@ -1283,10 +1286,10 @@
     (ingredient (name "Чеснок свежий") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Мясная смесь фаршированная") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 7 ?c2 5 ?c3 1) 0.83))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 9 ?c3 3) 0.16))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Мясная смесь фаршированная CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Начинка мясная + Лук красный + Чеснок свежий -> Мясная смесь фаршированная (CF=" ?res ")"))))
     )
 )
 
@@ -1297,10 +1300,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Соусная композиция") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 5 ?c3 7) 0.62))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 6 ?c3 1) 0.11))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соусная композиция CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус голландез + Соус для пасты + Соль йодированная -> Соусная композиция (CF=" ?res ")"))))
     )
 )
 
@@ -1311,10 +1314,10 @@
     (ingredient (name "Яйца категории С0") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Десертная основа") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 3 ?c2 6 ?c3 7) 0.61))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 5 ?c3 5) 0.21))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Десертная основа CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Основа для десерта + Сахар тростниковый + Яйца категории С0 -> Десертная основа (CF=" ?res ")"))))
     )
 )
 
@@ -1325,10 +1328,10 @@
     (ingredient (name "Томаты спелые") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Пицца Маргарита свежая") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 6 ?c2 9 ?c3 4) 0.82))
+    (bind ?res (* (weighted-avg ?c1 3 ?c2 7 ?c3 5) 0.37))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца Маргарита свежая CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Основа пиццы готовая + Сыр Моцарелла + Томаты спелые -> Пицца Маргарита свежая (CF=" ?res ")"))))
     )
 )
 
@@ -1339,10 +1342,10 @@
     (ingredient (name "Сыр Моцарелла") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Паста Карбонара") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 7 ?c3 6) 0.57))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 2 ?c3 4) 0.93))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Паста Карбонара CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Паста свежая + Соус для пасты + Сыр Моцарелла -> Паста Карбонара (CF=" ?res ")"))))
     )
 )
 
@@ -1353,10 +1356,10 @@
     (ingredient (name "Сырная стружка") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Салат Цезарь классический") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 7 ?c3 8) 0.28))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 6 ?c3 1) 0.21))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Салат Цезарь классический CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощи для салата + Котлеты сырые + Сырная стружка -> Салат Цезарь классический (CF=" ?res ")"))))
     )
 )
 
@@ -1367,10 +1370,10 @@
     (ingredient (name "Лимоны свежие") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Суп Том Ям") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 2 ?c2 8 ?c3 4) 0.19))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 4 ?c3 6) 0.92))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Суп Том Ям CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бульон куриный процеженный + Чеснок свежий + Лимоны свежие -> Суп Том Ям (CF=" ?res ")"))))
     )
 )
 
@@ -1381,10 +1384,10 @@
     (ingredient (name "Перец черный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Стейк Рибай medium rare") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 6 ?c2 8 ?c3 4) 0.98))
+    (bind ?res (* (weighted-avg ?c1 1 ?c2 1 ?c3 8) 0.3))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Стейк Рибай medium rare CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Мясо для жарки + Масло оливковое + Перец черный -> Стейк Рибай medium rare (CF=" ?res ")"))))
     )
 )
 
@@ -1395,10 +1398,10 @@
     (ingredient (name "Сыр Моцарелла") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Роллы Калифорния") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 2 ?c2 2 ?c3 5) 0.98))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 7 ?c3 5) 0.71))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Роллы Калифорния CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Гарнир рисовый подготовленный + Овощи для салата + Сыр Моцарелла -> Роллы Калифорния (CF=" ?res ")"))))
     )
 )
 
@@ -1409,10 +1412,10 @@
     (ingredient (name "Сыр Моцарелла") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Бургер Чизбургер") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 4 ?c3 9) 0.83))
+    (bind ?res (* (weighted-avg ?c1 1 ?c2 6 ?c3 4) 0.64))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бургер Чизбургер CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Котлеты сырые + Тесто для выпечки + Сыр Моцарелла -> Бургер Чизбургер (CF=" ?res ")"))))
     )
 )
 
@@ -1423,10 +1426,10 @@
     (ingredient (name "Соус сырный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Тако с говядиной") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 8 ?c2 10 ?c3 10) 0.44))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 4 ?c3 6) 1.0))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тако с говядиной CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто для выпечки + Начинка мясная + Соус сырный -> Тако с говядиной (CF=" ?res ")"))))
     )
 )
 
@@ -1437,10 +1440,10 @@
     (ingredient (name "Лук красный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Рамен с курицей") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 6 ?c3 10) 0.87))
+    (bind ?res (* (weighted-avg ?c1 3 ?c2 2 ?c3 8) 0.79))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Рамен с курицей CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бульон куриный процеженный + Рыба для запекания + Лук красный -> Рамен с курицей (CF=" ?res ")"))))
     )
 )
 
@@ -1451,10 +1454,10 @@
     (ingredient (name "Лук красный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Плов узбекский") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 5 ?c2 3 ?c3 4) 0.54))
+    (bind ?res (* (weighted-avg ?c1 1 ?c2 7 ?c3 8) 0.84))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Плов узбекский CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Гарнир рисовый подготовленный + Начинка мясная + Лук красный -> Плов узбекский (CF=" ?res ")"))))
     )
 )
 
@@ -1465,10 +1468,10 @@
     (ingredient (name "Соусная композиция") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Лазанья мясная") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 9 ?c2 1 ?c3 5) 0.93))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 7 ?c3 8) 0.67))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Лазанья мясная CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Овощная смесь тушеная + Мясная смесь фаршированная + Соусная композиция -> Лазанья мясная (CF=" ?res ")"))))
     )
 )
 
@@ -1479,10 +1482,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Пельмени сибирские") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 8 ?c2 4 ?c3 1) 0.3))
+    (bind ?res (* (weighted-avg ?c1 3 ?c2 1 ?c3 4) 0.88))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пельмени сибирские CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Фарш для пельменей + Тесто раскатанное + Соль йодированная -> Пельмени сибирские (CF=" ?res ")"))))
     )
 )
 
@@ -1493,10 +1496,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Курица гриль") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 1 ?c2 1 ?c3 9) 0.66))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 6 ?c3 3) 0.85))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Курица гриль CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Мясо маринованное + Овощи гриль + Соль йодированная -> Курица гриль (CF=" ?res ")"))))
     )
 )
 
@@ -1507,10 +1510,10 @@
     (ingredient (name "Лимоны свежие") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Рыба запеченная с лимоном") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 3 ?c2 8 ?c3 1) 0.34))
+    (bind ?res (* (weighted-avg ?c1 3 ?c2 2 ?c3 8) 0.28))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Рыба запеченная с лимоном CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Рыба в кляре + Овощи тушеные + Лимоны свежие -> Рыба запеченная с лимоном (CF=" ?res ")"))))
     )
 )
 
@@ -1521,10 +1524,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Омлет с овощами") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 2 ?c3 10) 0.15))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 5 ?c3 1) 0.89))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Омлет с овощами CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Яичная смесь + Начинка овощная + Соль йодированная -> Омлет с овощами (CF=" ?res ")"))))
     )
 )
 
@@ -1535,10 +1538,10 @@
     (ingredient (name "Травяная смесь итальянская") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Пицца Маргарита запеченная") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 3 ?c2 10 ?c3 8) 0.43))
+    (bind ?res (* (weighted-avg ?c1 8 ?c2 4 ?c3 9) 0.49))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца Маргарита запеченная CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца Маргарита свежая + Сыр Моцарелла + Травяная смесь итальянская -> Пицца Маргарита запеченная (CF=" ?res ")"))))
     )
 )
 
@@ -1549,10 +1552,10 @@
     (ingredient (name "Орегано сушеный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Паста Карбонара с трюфелем") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 3 ?c3 8) 0.83))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 8 ?c3 4) 0.98))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Паста Карбонара с трюфелем CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Паста Карбонара + Сырная стружка + Орегано сушеный -> Паста Карбонара с трюфелем (CF=" ?res ")"))))
     )
 )
 
@@ -1563,10 +1566,10 @@
     (ingredient (name "Заправка винегрет") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Салат Цезарь с креветками") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 3 ?c3 8) 0.98))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 6 ?c3 9) 0.18))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Салат Цезарь с креветками CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Салат Цезарь классический + Рыба для запекания + Заправка винегрет -> Салат Цезарь с креветками (CF=" ?res ")"))))
     )
 )
 
@@ -1577,10 +1580,10 @@
     (ingredient (name "Мед цветочный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Суп Том Ям кокосовый") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 9 ?c2 2 ?c3 1) 0.39))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 1 ?c3 2) 0.41))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Суп Том Ям кокосовый CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Суп Том Ям + Молоко пастеризованное + Мед цветочный -> Суп Том Ям кокосовый (CF=" ?res ")"))))
     )
 )
 
@@ -1591,10 +1594,10 @@
     (ingredient (name "Базилик свежий") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Стейк Рибай с соусом") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 5 ?c2 8 ?c3 7) 0.58))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 7 ?c3 7) 0.78))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Стейк Рибай с соусом CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Стейк Рибай medium rare + Соус для мяса + Базилик свежий -> Стейк Рибай с соусом (CF=" ?res ")"))))
     )
 )
 
@@ -1605,10 +1608,10 @@
     (ingredient (name "Травяная смесь итальянская") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Роллы Калифорния премиум") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 7 ?c3 4) 0.19))
+    (bind ?res (* (weighted-avg ?c1 1 ?c2 9 ?c3 10) 0.98))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Роллы Калифорния премиум CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Роллы Калифорния + Сыр Моцарелла + Травяная смесь итальянская -> Роллы Калифорния премиум (CF=" ?res ")"))))
     )
 )
 
@@ -1619,10 +1622,10 @@
     (ingredient (name "Сыр Моцарелла") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Бургер Чизбургер двойной") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 9 ?c2 6 ?c3 8) 0.18))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 8 ?c3 5) 0.1))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бургер Чизбургер двойной CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бургер Чизбургер + Котлеты сырые + Сыр Моцарелла -> Бургер Чизбургер двойной (CF=" ?res ")"))))
     )
 )
 
@@ -1633,10 +1636,10 @@
     (ingredient (name "Перец черный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Тако с говядиной острейшие") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 1 ?c2 4 ?c3 5) 0.93))
+    (bind ?res (* (weighted-avg ?c1 1 ?c2 5 ?c3 2) 0.67))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тако с говядиной острейшие CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тако с говядиной + Соус сырный + Перец черный -> Тако с говядиной острейшие (CF=" ?res ")"))))
     )
 )
 
@@ -1647,10 +1650,10 @@
     (ingredient (name "Лимоны свежие") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Рамен с курицей пикантный") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 1 ?c2 1 ?c3 5) 0.16))
+    (bind ?res (* (weighted-avg ?c1 9 ?c2 9 ?c3 8) 0.53))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Рамен с курицей пикантный CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Рамен с курицей + Чеснок свежий + Лимоны свежие -> Рамен с курицей пикантный (CF=" ?res ")"))))
     )
 )
 
@@ -1661,10 +1664,10 @@
     (ingredient (name "Травяная смесь итальянская") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Плов узбекский праздничный") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 2 ?c2 5 ?c3 4) 0.57))
+    (bind ?res (* (weighted-avg ?c1 2 ?c2 4 ?c3 6) 0.87))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Плов узбекский праздничный CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Плов узбекский + Масло оливковое + Травяная смесь итальянская -> Плов узбекский праздничный (CF=" ?res ")"))))
     )
 )
 
@@ -1675,10 +1678,10 @@
     (ingredient (name "Салат Цезарь с креветками") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Итальянский ужин премиум") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 3 ?c2 6 ?c3 3) 0.48))
+    (bind ?res (* (weighted-avg ?c1 2 ?c2 5 ?c3 6) 0.75))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Итальянский ужин премиум CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца Маргарита запеченная + Паста Карбонара с трюфелем + Салат Цезарь с креветками -> Итальянский ужин премиум (CF=" ?res ")"))))
     )
 )
 
@@ -1689,10 +1692,10 @@
     (ingredient (name "Рамен с курицей пикантный") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Азиатский сет делюкс") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 4 ?c3 5) 0.49))
+    (bind ?res (* (weighted-avg ?c1 3 ?c2 7 ?c3 1) 0.32))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Азиатский сет делюкс CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Роллы Калифорния премиум + Суп Том Ям кокосовый + Рамен с курицей пикантный -> Азиатский сет делюкс (CF=" ?res ")"))))
     )
 )
 
@@ -1703,10 +1706,10 @@
     (ingredient (name "Тако с говядиной") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Мексиканская фиеста") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 6 ?c3 9) 0.16))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 4 ?c3 10) 0.54))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Мексиканская фиеста CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тако с говядиной острейшие + Бургер Чизбургер двойной + Тако с говядиной -> Мексиканская фиеста (CF=" ?res ")"))))
     )
 )
 
@@ -1717,10 +1720,10 @@
     (ingredient (name "Пицца Маргарита запеченная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Праздничный гала-ужин") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 7 ?c2 9 ?c3 9) 0.12))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 4 ?c3 7) 0.18))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Праздничный гала-ужин CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Стейк Рибай с соусом + Плов узбекский праздничный + Пицца Маргарита запеченная -> Праздничный гала-ужин (CF=" ?res ")"))))
     )
 )
 
@@ -1731,10 +1734,10 @@
     (ingredient (name "Паста Карбонара с трюфелем") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Семейный обед выходного дня") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 1 ?c2 7 ?c3 1) 0.42))
+    (bind ?res (* (weighted-avg ?c1 8 ?c2 4 ?c3 1) 0.67))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Семейный обед выходного дня CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Лазанья мясная + Салат Цезарь с креветками + Паста Карбонара с трюфелем -> Семейный обед выходного дня (CF=" ?res ")"))))
     )
 )
 
@@ -1745,10 +1748,10 @@
     (ingredient (name "Десертная основа") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Романтический ужин") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 6 ?c3 2) 0.83))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 3 ?c3 5) 0.73))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Романтический ужин CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца Маргарита запеченная + Стейк Рибай с соусом + Десертная основа -> Романтический ужин (CF=" ?res ")"))))
     )
 )
 
@@ -1759,10 +1762,10 @@
     (ingredient (name "Салат Цезарь классический") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Бизнес-ланч премиум") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 8 ?c3 4) 0.77))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 1 ?c3 7) 0.9))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Бизнес-ланч премиум CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Паста Карбонара с трюфелем + Роллы Калифорния премиум + Салат Цезарь классический -> Бизнес-ланч премиум (CF=" ?res ")"))))
     )
 )
 
@@ -1773,10 +1776,10 @@
     (ingredient (name "Начинка сладкая") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Детский праздничный набор") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 5 ?c2 8 ?c3 9) 0.9))
+    (bind ?res (* (weighted-avg ?c1 6 ?c2 10 ?c3 5) 0.52))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Детский праздничный набор CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Омлет с овощами + Пельмени сибирские + Начинка сладкая -> Детский праздничный набор (CF=" ?res ")"))))
     )
 )
 
@@ -1787,10 +1790,10 @@
     (ingredient (name "Овощная смесь тушеная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Вегетарианское комбо") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 6 ?c2 4 ?c3 10) 0.67))
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 1 ?c3 2) 0.52))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Вегетарианское комбо CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Салат Цезарь с креветками + Рыба запеченная с лимоном + Овощная смесь тушеная -> Вегетарианское комбо (CF=" ?res ")"))))
     )
 )
 
@@ -1801,10 +1804,10 @@
     (ingredient (name "Лазанья мясная") (certainty ?c3&:(> ?c3 0.1)))
     ?f <- (ingredient (name "Шведский стол домашний") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 7 ?c3 9) 0.15))
+    (bind ?res (* (weighted-avg ?c1 2 ?c2 1 ?c3 8) 0.53))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Шведский стол домашний CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца Маргарита запеченная + Паста Карбонара с трюфелем + Лазанья мясная -> Шведский стол домашний (CF=" ?res ")"))))
     )
 )
 
@@ -1814,10 +1817,10 @@
     (ingredient (name "Вода фильтрованная") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Мука пшеничная в/с") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 3 ?c2 2) 0.65))
+    (bind ?res (* (weighted-avg ?c1 1 ?c2 2) 0.67))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Мука пшеничная в/с CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Смесь муки и соли + Вода фильтрованная -> Мука пшеничная в/с (CF=" ?res ")"))))
     )
 )
 
@@ -1827,10 +1830,10 @@
     (ingredient (name "Соль йодированная") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Сахар тростниковый") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 10 ?c2 5) 0.82))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 8) 0.28))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Сахар тростниковый CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Сахарный сироп + Соль йодированная -> Сахар тростниковый (CF=" ?res ")"))))
     )
 )
 
@@ -1840,10 +1843,10 @@
     (ingredient (name "Молоко пастеризованное") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Яйца категории С0") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 7 ?c2 6) 0.91))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 2) 0.44))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Яйца категории С0 CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Яичная смесь + Молоко пастеризованное -> Яйца категории С0 (CF=" ?res ")"))))
     )
 )
 
@@ -1853,10 +1856,10 @@
     (ingredient (name "Масло сливочное") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Смесь муки и соли") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 7 ?c2 4) 0.61))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 4) 0.6))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Смесь муки и соли CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто дрожжевое базовое + Масло сливочное -> Смесь муки и соли (CF=" ?res ")"))))
     )
 )
 
@@ -1866,10 +1869,10 @@
     (ingredient (name "Сыр Моцарелла") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Тесто для пиццы выброженное") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 9 ?c2 9) 0.22))
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 8) 0.76))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Тесто для пиццы выброженное CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Основа пиццы готовая + Сыр Моцарелла -> Тесто для пиццы выброженное (CF=" ?res ")"))))
     )
 )
 
@@ -1879,10 +1882,10 @@
     (ingredient (name "Томаты спелые") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Основа пиццы готовая") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 3 ?c2 5) 0.13))
+    (bind ?res (* (weighted-avg ?c1 3 ?c2 1) 0.33))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Основа пиццы готовая CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца Маргарита свежая + Томаты спелые -> Основа пиццы готовая (CF=" ?res ")"))))
     )
 )
 
@@ -1892,9 +1895,9 @@
     (ingredient (name "Травяная смесь итальянская") (certainty ?c2&:(> ?c2 0.1)))
     ?f <- (ingredient (name "Пицца Маргарита свежая") (certainty ?cur-c))
     =>
-    (bind ?res (* (weighted-avg ?c1 4 ?c2 7) 0.11))
+    (bind ?res (* (weighted-avg ?c1 4 ?c2 2) 0.15))
     (if (> ?res ?cur-c) then
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца Маргарита свежая CF=" ?res))))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца Маргарита запеченная + Травяная смесь итальянская -> Пицца Маргарита свежая (CF=" ?res ")"))))
     )
 )
