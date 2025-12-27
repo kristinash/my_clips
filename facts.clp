@@ -1,10 +1,10 @@
 (deffacts initial-data
     (ioproxy (fact-id 112))
     
-   ;
+ ;
 ; Автоматически сгенерированные ингредиенты
 ;
-    (ingredient (name "Мука пшеничная в/с"))
+    (ingredient (name "Мука пшеничная"))
     (ingredient (name "Вода фильтрованная"))
     (ingredient (name "Яйца категории С0"))
     (ingredient (name "Соль йодированная"))
