@@ -70,7 +70,6 @@
     (ingredient (name "Пицца Маргарита"))
 )
 
-
 ; Правило спрашивает про настроение в самом начале
 (defrule ask-user-mood
    (declare (salience 150))
@@ -150,6 +149,19 @@
         (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус (быстрый) CF=" ?res))))
     )
 )
+(defrule make-margherita-budget
+    (declare (salience 10))
+    (ingredient (name "Тесто для пиццы") (certainty ?c1&:(> ?c1 0.1)))
+    (ingredient (name "Соус томатный") (certainty ?c2&:(> ?c2 0.1)))
+    (ingredient (name "Сыр Российский") (certainty ?c3&:(> ?c3 0.1)))
+    ?f <- (ingredient (name "Пицца Маргарита") (certainty ?cur-c))
+    =>
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 5 ?c3 10) 0.7))
+    (if (> ?res ?cur-c) then
+        (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца (бюджет) CF=" ?res))))
+    )
+)
 
 (defrule make-margherita-premium
     (declare (salience 10))
@@ -165,19 +177,7 @@
     )
 )
 
-(defrule make-margherita-budget
-    (declare (salience 10))
-    (ingredient (name "Тесто для пиццы") (certainty ?c1&:(> ?c1 0.1)))
-    (ingredient (name "Соус томатный") (certainty ?c2&:(> ?c2 0.1)))
-    (ingredient (name "Сыр Российский") (certainty ?c3&:(> ?c3 0.1)))
-    ?f <- (ingredient (name "Пицца Маргарита") (certainty ?cur-c))
-    =>
-    (bind ?res (* (weighted-avg ?c1 5 ?c2 5 ?c3 10) 0.7))
-    (if (> ?res ?cur-c) then
-        (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
-        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца (бюджет) CF=" ?res))))
-    )
-)
+
 
 
 (defrule print-report-header
