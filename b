@@ -78,7 +78,6 @@
     (retract ?f)
 )
 
-; Правило вопроса (сработает только если НЕТ mood-factor)
 (defrule ask-user-mood
    (declare (salience 150))
    ?proxy <- (ioproxy (mode 0))
@@ -88,7 +87,7 @@
        (mode 1)
        (current-ask "MOOD_QUESTION")
        (messages "У вас сегодня хорошее настроение?")
-       (answers "Да" "Нет"))
+       (answers "да" "нет")) ; <--- ТУТ маленькими буквами
    (halt)
 )
 
