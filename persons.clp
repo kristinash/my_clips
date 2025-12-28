@@ -1,5 +1,3 @@
-
-
 (deftemplate input-question 
     (slot name) 
     (slot certainty (type NUMBER))
@@ -9,8 +7,8 @@
     (slot fact-id) 
     (slot mode (default 0))          
     (slot current-ask (default none)) 
-    (multislot messages)             
-    (multislot answers)               
+    (multislot messages)               
+    (multislot answers)                
 )
 
 (deftemplate ingredient 
@@ -27,7 +25,6 @@
     (slot value)
 )
 
-; Функция максимума с ограничением до 1.0
 (deffunction max-certainty (?old-cf ?new-cf)
    (min 1.0 (if (> ?new-cf ?old-cf) 
                 then ?new-cf 
@@ -49,10 +46,8 @@
        else 0.0)
 )
 
-
 (deffacts initial-data
     (ioproxy (fact-id 112))
-    
     (ingredient (name "Мука пшеничная"))
     (ingredient (name "Вода"))
     (ingredient (name "Дрожжи"))
@@ -64,13 +59,20 @@
     (ingredient (name "Масло оливковое"))
     (ingredient (name "Сыр Моцарелла"))
     (ingredient (name "Сыр Российский"))
-
     (ingredient (name "Тесто для пиццы"))
     (ingredient (name "Соус томатный"))
     (ingredient (name "Пицца Маргарита"))
 )
 
-; Правило спрашивает про настроение в самом начале
+(defrule clear-proxy-messages
+    (declare (salience 91))
+    ?f <- (clearmessage)
+    ?proxy <- (ioproxy)
+    =>
+    (modify ?proxy (messages) (answers))
+    (retract ?f)
+)
+
 (defrule ask-user-mood
    (declare (salience 150))
    ?proxy <- (ioproxy (mode 0))
@@ -79,24 +81,26 @@
    (modify ?proxy 
        (mode 1)
        (current-ask "MOOD_QUESTION")
-       (messages (create$ "Какое у вас сегодня настроение?"))
-       (answers (create$ "Хорошее" "Плохое")))
+       (messages "У вас сегодня хорошее настроение?")
+       (answers "хорошее" "плохое"))
+   (halt)
 )
 
-; Обработка ответа про настроение
-(defrule handle-mood-answer
+(defrule handle-mood-voice
    (declare (salience 200))
-   ?q <- (input-question (name "MOOD_QUESTION") (certainty ?val))
+   ?ans <- (answer ?val)
    ?proxy <- (ioproxy (current-ask "MOOD_QUESTION"))
    =>
-   (bind ?bonus (if (> ?val 0) then 0.1 else -0.1))
+   (bind ?normalized-val (lowcase (str-cat ?val)))
+   (bind ?bonus (if (eq ?normalized-val "хорошее") 
+                    then 0.1 
+                    else -0.1))
    (assert (mood-factor (value ?bonus)))
-   ; Важно: сбрасываем mode в 0 и очищаем ключ вопроса
-   (modify ?proxy (mode 0) (current-ask none))
-   (retract ?q)
+   (modify ?proxy (mode 0) (current-ask none) (messages) (answers))
+   (retract ?ans)
+   (printout t "Mood bonus assigned: " ?bonus " based on: " ?val crlf)
 )
 
-; Сопоставление ингредиентов, выбранных в ListView
 (defrule match-ingredients
     (declare (salience 100))
     ?f <- (ingredient (name ?name))
@@ -105,7 +109,6 @@
     (modify ?f (certainty ?new-c))
     (retract ?q)
 )
-
 
 (defrule make-pizza-dough-std
     (declare (salience 10))
@@ -149,6 +152,7 @@
         (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус (быстрый) CF=" ?res))))
     )
 )
+
 (defrule make-margherita-budget
     (declare (salience 10))
     (ingredient (name "Тесто для пиццы") (certainty ?c1&:(> ?c1 0.1)))
@@ -175,19 +179,6 @@
         (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
         (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца (премиум) CF=" ?res))))
     )
-)
-
-
-
-
-(defrule print-report-header
-    (declare (salience -5))
-    (exists (ingredient (type result)))
-    (not (header-done))
-    =>
-    (assert (header-done))
-    (assert (sendmessage (value "--------------------------")))
-    (assert (sendmessage (value "--- ФИНАЛЬНЫЙ ОТЧЕТ ---")))
 )
 
 (defrule generate-final-report
