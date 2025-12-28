@@ -162,7 +162,6 @@ namespace ClipsFormsExample
             {
                 FactAddressValue feat = (FactAddressValue)facts[i];
                 string name = DecodeClipsString(feat.GetSlotValue("name").ToString().Trim('"'));
-                string type = feat.GetSlotValue("type").ToString();
                 if (!ingredientCFValues.ContainsKey(name))
                 {
                     ingredientCFValues[name] = 1.0;
@@ -173,29 +172,21 @@ namespace ClipsFormsExample
                 }
             }
             NewRecognPhrases(voiceNames);
-
         }
 
         private void nextBtn_Click(object sender, EventArgs e)
         {
-            if (loadedFilePaths.Count == 0) return;
-            Task.Run(() => {
-                clips.Clear();
-                var sorted = loadedFilePaths.OrderBy(p => Path.GetFileName(p).ToLower() == "basic.clp" ? 0 : 1).ToList();
-                foreach (string filePath in sorted) clips.Load(filePath);
-                clips.Reset();
-
-                this.Invoke(new MethodInvoker(() => {
-                    foreach (ListViewItem item in listView1.Items)
-                        if (item.Checked)
-                        {
-                            double val = ingredientCFValues.ContainsKey(item.Text) ? ingredientCFValues[item.Text] : 1.0;
-                            clips.AssertString($"(input-question (name \"{item.Text}\") (certainty {ToClipsNumberString(val)}))");
-                        }
-                }));
-
-                ExecuteEngineLoop();
-            });
+            clips.Clear();
+            var sorted = loadedFilePaths.OrderBy(p => !p.EndsWith("basic.clp", StringComparison.OrdinalIgnoreCase)).ToList();
+            foreach (string filePath in sorted) clips.Load(filePath);
+            clips.Reset();
+            foreach (ListViewItem item in listView1.Items)
+                if (item.Checked)
+                {
+                    double val = ingredientCFValues.ContainsKey(item.Text) ? ingredientCFValues[item.Text] : 1.0;
+                    clips.AssertString($"(input-question (name \"{item.Text}\") (certainty {ToClipsNumberString(val)}))");
+                }
+            ExecuteEngineLoop();
         }
 
         private void ExecuteEngineLoop()
@@ -228,67 +219,37 @@ namespace ClipsFormsExample
 
                     if (isVoiceEnabled)
                     {
-                        this.Invoke(new MethodInvoker(() => {
-                            outputBox.AppendText("СИСТЕМА (Голос): " + message + "\r\n");
-                            synth.SpeakAsync(message);
-                            isWaitingForResponse = true;
-                            NewRecognPhrases(phrases);
-                        }));
+                        outputBox.AppendText("СИСТЕМА (Голос): " + message + "\r\n");
+                        synth.SpeakAsync(message);
+                        isWaitingForResponse = true;
+                        NewRecognPhrases(phrases);
+
                     }
                     else
                     {
-                        ansValues = (MultifieldValue)proxy.GetSlotValue("answers");
-                        phrases = new List<string>();
-                        MultifieldValue msgs = (MultifieldValue)proxy.GetSlotValue("messages");
-                        List<string> decodedMessages = new List<string>();
-
-                        for (int i = 0; i < msgs.Count; i++)
-                        {
-                            string raw = msgs[i].ToString().Trim('"');
-                            decodedMessages.Add(Encoding.UTF8.GetString(Encoding.Default.GetBytes(raw)));
-                        }
-                        for (int i = 0; i < ansValues.Count; i++)
-                        {
-                            string raw = ansValues[i].ToString().Trim('"');
-                            phrases.Add(Encoding.UTF8.GetString(Encoding.Default.GetBytes(raw)));
-                        }
-
-                        this.Invoke(new MethodInvoker(() => {
-                            string question = decodedMessages.LastOrDefault() ?? "Выберите вариант:";
-                            outputBox.AppendText("СИСТЕМА: " + question + "\r\n");
-                            ShowResponseButtons(question, phrases);
-                        }));
+                        outputBox.AppendText("СИСТЕМА: " + message + "\r\n");
+                        ShowResponseButtons(message, phrases);
                     }
                 }
                 else
                 {
-                    this.Invoke(new MethodInvoker(() => ShowProxyLogs()));
+                    ShowProxyLogs();
                 }
             }
         }
 
         private void ShowResponseButtons(string question, List<string> options)
         {
-            Form dialog = new Form()
-            {
-                Text = "Выбор ответа",
-                Width = 350,
-                Height = 150,
-                FormBorderStyle = FormBorderStyle.FixedToolWindow,
-                StartPosition = FormStartPosition.CenterParent
-            };
-
-            Label lbl = new Label() { Text = question, Dock = DockStyle.Top, Height = 50, TextAlign = ContentAlignment.MiddleCenter };
-            FlowLayoutPanel panel = new FlowLayoutPanel() { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
-
+            var dialog = new Form {Width = 350, Height = 150, StartPosition = FormStartPosition.CenterParent };
+            var panel = new FlowLayoutPanel { Dock = DockStyle.Fill };
             dialog.Controls.Add(panel);
-            dialog.Controls.Add(lbl);
+            dialog.Controls.Add(new Label { Text = question, Dock = DockStyle.Top});
 
-            foreach (string opt in options)
+            foreach (var opt in options)
             {
-                Button btn = new Button() { Text = opt, AutoSize = true };
+                var btn = new Button { Text = opt };
                 btn.Click += (s, e) => {
-                    clips.AssertString($"(answer {opt})");
+                    clips.AssertString($"(answer \"{opt}\")");
                     dialog.Close();
                     clips.Run();
                     ExecuteEngineLoop();
@@ -316,11 +277,8 @@ namespace ClipsFormsExample
 
             var processLogs = allMessages.Where(m => m.Contains("ПРОЦЕСС") || m.Contains("ДЕЙСТВИЕ")).ToList();
             var finalResults = allMessages.Where(m => m.StartsWith("ИТОГО")).ToList();
-
             foreach (var log in processLogs) outputBox.AppendText(log + "\r\n");
-            foreach (var log in allMessages.Except(processLogs).Except(finalResults)) outputBox.AppendText(log + "\r\n");
             foreach (var log in finalResults) outputBox.AppendText("\r\n>>> " + log + "\r\n");
-
             UpdateResultsTable(finalResults);
         }
 
@@ -346,44 +304,34 @@ namespace ClipsFormsExample
 
         private void listView1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            ListViewHitTestInfo hit = listView1.HitTest(e.Location);
-            if (hit.Item != null && hit.Item.Checked && hit.SubItem == hit.Item.SubItems[1])
-            {
-                if (isEditing) return;
-                isEditing = true;
-                TextBox tb = new TextBox { Bounds = hit.SubItem.Bounds, Text = hit.SubItem.Text, BorderStyle = BorderStyle.FixedSingle };
-                listView1.Controls.Add(tb); tb.Focus();
-                tb.KeyDown += (s, args) => {
-                    if (args.KeyCode == Keys.Enter)
-                    {
-                        double val = ParseNumberString(tb.Text);
-                        ingredientCFValues[hit.Item.Text] = val;
-                        hit.Item.SubItems[1].Text = ToDisplayNumberString(val);
-                        AbortEdit(tb);
-                    }
-                    if (args.KeyCode == Keys.Escape) AbortEdit(tb);
-                };
-                tb.LostFocus += (s, args) => AbortEdit(tb);
-            }
-        }
+            var hit = listView1.HitTest(e.Location);
+            if (hit.Item == null || !hit.Item.Checked || hit.SubItem != hit.Item.SubItems[1] || isEditing) return;
 
-        private void AbortEdit(TextBox tb) { listView1.Controls.Remove(tb); tb.Dispose(); isEditing = false; }
+            isEditing = true;
+            var tb = new TextBox { Bounds = hit.SubItem.Bounds, Text = hit.SubItem.Text, BorderStyle = BorderStyle.FixedSingle };
+
+            void CloseEditor() { listView1.Controls.Remove(tb); tb.Dispose(); isEditing = false; }
+
+            tb.KeyDown += (s, args) => {
+                if (args.KeyCode == Keys.Enter)
+                {
+                    double val = ParseNumberString(tb.Text);
+                    ingredientCFValues[hit.Item.Text] = val;
+                    hit.SubItem.Text = ToDisplayNumberString(val);
+                    CloseEditor();
+                }
+                else if (args.KeyCode == Keys.Escape) CloseEditor();
+            };
+
+            tb.LostFocus += (s, args) => CloseEditor();
+            listView1.Controls.Add(tb);
+            tb.Focus();
+        }
 
         private void resetBtn_Click(object sender, EventArgs e)
         {
             foreach (ListViewItem item in listView1.Items) { item.Checked = false; item.SubItems[1].Text = ""; ingredientCFValues[item.Text] = 1.0; }
             listView2.Items.Clear(); outputBox.Clear();
-        }
-
-        private void listView1_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            this.BeginInvoke(new MethodInvoker(() => {
-                if (e.Index < listView1.Items.Count)
-                {
-                    var item = listView1.Items[e.Index];
-                    item.SubItems[1].Text = (e.NewValue == CheckState.Checked) ? ToDisplayNumberString(ingredientCFValues[item.Text]) : "";
-                }
-            }));
         }
 
         private void btnVoice_Click(object sender, EventArgs e)
@@ -394,7 +342,7 @@ namespace ClipsFormsExample
             else recog.RecognizeAsyncStop();
         }
 
-        private string DecodeClipsString(string t) { try { return Encoding.UTF8.GetString(Encoding.Default.GetBytes(t)); } catch { return t; } }
+        private string DecodeClipsString(string t) { return Encoding.UTF8.GetString(Encoding.Default.GetBytes(t));  }
         private string ToClipsNumberString(double v) => v.ToString("F6", invariantCulture);
         private string ToDisplayNumberString(double v) => v.ToString("F2", uiCulture);
         private double ParseNumberString(string t) { t = t.Trim().Replace(',', '.'); return double.TryParse(t, NumberStyles.Any, invariantCulture, out double r) ? Math.Max(-1, Math.Min(1, r)) : 1.0; }
