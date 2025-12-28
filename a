@@ -23,7 +23,7 @@ namespace ClipsFormsExample
         private bool isEditing = false;
         private CultureInfo invariantCulture = CultureInfo.InvariantCulture;
         private CultureInfo uiCulture = CultureInfo.CurrentUICulture;
-
+        private bool isWaitingForResponse = false; // Флаг: ждем ли мы ответа на вопрос
         private bool isVoiceEnabled = false;
         private Microsoft.Speech.Recognition.SpeechRecognitionEngine recog;
         private Microsoft.Speech.Synthesis.SpeechSynthesizer synth; // Синтезатор речи
@@ -53,25 +53,33 @@ namespace ClipsFormsExample
                 if (!isVoiceEnabled) return;
 
                 SystemSounds.Asterisk.Play();
-
                 string command = e.Result.Text;
                 string lowerCmd = command.ToLower();
 
-                if (lowerCmd == "да" || lowerCmd == "нет") await Task.Delay(400);
+                // 1. Если ждем ответа на вопрос
+                if (isWaitingForResponse)
+                {
+                    if (lowerCmd == "да" || lowerCmd == "нет")
+                    {
+                        await Task.Delay(400);
+                        // Отправляем нажатие клавиш в активное окно (MessageBox)
+                        if (lowerCmd == "да")
+                            SendKeys.SendWait("{ENTER}");
+                        else
+                            SendKeys.SendWait("{RIGHT}{ENTER}");
+                    }
+                    return; // В режиме вопроса игнорируем всё остальное, включая ингредиенты
+                }
 
+                // 2. Если НЕ ждем ответа — обрабатываем системные команды и ингредиенты
                 switch (lowerCmd)
                 {
-                    case "да": SendKeys.SendWait("{ENTER}"); return;
-                    case "нет":
-                        SendKeys.SendWait("{RIGHT}");
-                        await Task.Delay(150);
-                        SendKeys.SendWait("{ENTER}");
-                        return;
                     case "открыть": this.Invoke(new MethodInvoker(() => openFile_Click(this, EventArgs.Empty))); return;
                     case "дальше": this.Invoke(new MethodInvoker(() => nextBtn_Click(this, EventArgs.Empty))); return;
                     case "рестарт": this.Invoke(new MethodInvoker(() => resetBtn_Click(this, EventArgs.Empty))); return;
                 }
 
+                // Обработка ингредиентов (сработает только если isWaitingForResponse == false)
                 this.Invoke(new MethodInvoker(() => {
                     foreach (ListViewItem item in listView1.Items)
                     {
@@ -180,7 +188,6 @@ namespace ClipsFormsExample
         private void ExecuteEngineLoop()
         {
             clips.Run();
-            // Ищем прокси
             var matches = (MultifieldValue)clips.Eval("(find-all-facts ((?f ioproxy)) TRUE)");
 
             if (matches.Count > 0)
@@ -190,30 +197,28 @@ namespace ClipsFormsExample
 
                 if (mode == "1")
                 {
-                    string askKey = proxy.GetSlotValue("current-ask").ToString().Trim('"');
-                    MultifieldValue msgs = (MultifieldValue)proxy.GetSlotValue("messages");
-                    string message = DecodeClipsString(msgs[msgs.Count - 1].ToString().Trim('"'));
+                    isWaitingForResponse = true; // Блокируем ингредиенты
 
-                    // Озвучка и вывод
+                    string message = DecodeClipsString(((MultifieldValue)proxy.GetSlotValue("messages"))[0].ToString().Trim('"'));
+
                     this.Invoke(new MethodInvoker(() => {
                         outputBox.AppendText("СИСТЕМА: " + message + System.Environment.NewLine);
                         if (isVoiceEnabled) synth.SpeakAsync(message);
                     }));
 
-                    // Показываем окно
+                    // MessageBox блокирует поток, пока пользователь не ответит (голосом или кнопкой)
                     DialogResult res = (DialogResult)this.Invoke(new Func<DialogResult>(() =>
                         MessageBox.Show(this, message, "Вопрос", MessageBoxButtons.YesNo)));
 
-                    // Отправляем ответ строкой, которую поймет правило handle-mood-voice
-                    string clipAns = (res == DialogResult.Yes) ? "Да" : "Нет";
+                    isWaitingForResponse = false;
 
-                    // ВАЖНО: сначала Assert-им ответ, потом сбрасываем режим прокси
-                    clips.AssertString($"(answer {clipAns})");
+                    // Приводим к нижнему регистру здесь, чтобы упростить жизнь CLIPS
+                    string clipAns = (res == DialogResult.Yes) ? "да" : "нет";
 
-                    // Запускаем Run еще раз, чтобы сработало правило handle-mood-voice
+                    // Добавляем кавычки \" , чтобы в CLIPS попало (answer "да"), а не (answer да)
+                    clips.AssertString($"(answer \"{clipAns}\")");
+
                     clips.Run();
-
-                    // После Run проверяем прокси снова
                     ExecuteEngineLoop();
                 }
                 else
