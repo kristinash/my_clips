@@ -7,8 +7,8 @@
     (slot fact-id) 
     (slot mode (default 0))          
     (slot current-ask (default none)) 
-    (multislot messages)              
-    (multislot answers)               
+    (multislot messages)               
+    (multislot answers)                
 )
 
 (deftemplate ingredient 
@@ -25,7 +25,6 @@
     (slot value)
 )
 
-; --- Функции расчета ---
 (deffunction max-certainty (?old-cf ?new-cf)
    (min 1.0 (if (> ?new-cf ?old-cf) 
                 then ?new-cf 
@@ -47,9 +46,6 @@
        else 0.0)
 )
 
-
-
-; --- Начальные данные ---
 (deffacts initial-data
     (ioproxy (fact-id 112))
     (ingredient (name "Мука пшеничная"))
@@ -68,9 +64,6 @@
     (ingredient (name "Пицца Маргарита"))
 )
 
-; --- Механизм ioproxy ---
-
-; Очистка прокси перед новым шагом
 (defrule clear-proxy-messages
     (declare (salience 91))
     ?f <- (clearmessage)
@@ -89,7 +82,7 @@
        (mode 1)
        (current-ask "MOOD_QUESTION")
        (messages "У вас сегодня хорошее настроение?")
-       (answers "хорошее" "плохое")) ; <--- ТУТ маленькими буквами
+       (answers "хорошее" "плохое"))
    (halt)
 )
 
@@ -98,22 +91,16 @@
    ?ans <- (answer ?val)
    ?proxy <- (ioproxy (current-ask "MOOD_QUESTION"))
    =>
-   ; str-cat преобразует символ или строку в строку
-   ; lowcase делает текст маленьким ("Да" -> "да")
    (bind ?normalized-val (lowcase (str-cat ?val)))
-   
    (bind ?bonus (if (eq ?normalized-val "хорошее") 
                     then 0.1 
                     else -0.1))
-   
    (assert (mood-factor (value ?bonus)))
-   
-   ; Очищаем состояние прокси
    (modify ?proxy (mode 0) (current-ask none) (messages) (answers))
    (retract ?ans)
    (printout t "Mood bonus assigned: " ?bonus " based on: " ?val crlf)
 )
-; Синхронизация ингредиентов из ListView
+
 (defrule match-ingredients
     (declare (salience 100))
     ?f <- (ingredient (name ?name))
@@ -165,6 +152,7 @@
         (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус (быстрый) CF=" ?res))))
     )
 )
+
 (defrule make-margherita-budget
     (declare (salience 10))
     (ingredient (name "Тесто для пиццы") (certainty ?c1&:(> ?c1 0.1)))
@@ -192,9 +180,6 @@
         (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца (премиум) CF=" ?res))))
     )
 )
-
-
-; --- Отчетность ---
 
 (defrule generate-final-report
     (declare (salience -10))
