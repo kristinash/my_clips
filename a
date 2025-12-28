@@ -27,7 +27,7 @@ namespace ClipsFormsExample
         private bool isVoiceEnabled = false;
         private Microsoft.Speech.Recognition.SpeechRecognitionEngine recog;
         private Microsoft.Speech.Synthesis.SpeechSynthesizer synth;
-        private string[] basicCommands = { "да", "нет", "открыть", "дальше", "рестарт" };
+        private string[] basicCommands = {  "открыть", "дальше", "рестарт" };
 
         public ClipsFormsExample()
         {
@@ -205,54 +205,135 @@ namespace ClipsFormsExample
             });
         }
 
+
         private void ExecuteEngineLoop()
         {
+            // Запускаем механизм логического вывода
             clips.Run();
+
+            // Ищем факт прокси, который управляет вводом-выводом
             var matches = (MultifieldValue)clips.Eval("(find-all-facts ((?f ioproxy)) TRUE)");
 
             if (matches.Count > 0)
             {
+                // Берем первый найденный прокси-факт
                 FactAddressValue proxy = (FactAddressValue)matches[0];
+
+                // Получаем режим (mode): 0 - работа завершена/отчет, 1 - ожидание ответа на вопрос
                 string mode = proxy.GetSlotValue("mode").ToString();
 
                 if (mode == "1")
                 {
-                    string message = DecodeClipsString(((MultifieldValue)proxy.GetSlotValue("messages"))[0].ToString().Trim('"'));
+                    // --- 1. Извлекаем текст вопроса ---
+                    MultifieldValue msgValues = (MultifieldValue)proxy.GetSlotValue("messages");
+                    string message = "Вопрос не задан";
+                    if (msgValues.Count > 0)
+                    {
+                        message = DecodeClipsString(msgValues[0].ToString().Trim('"'));
+                    }
+
+                    // --- 2. Извлекаем варианты ответов (answers) ---
+                    // В CLIPS это мультислот, здесь он становится MultifieldValue
                     MultifieldValue ansValues = (MultifieldValue)proxy.GetSlotValue("answers");
                     List<string> phrases = new List<string>();
-                    for (int i = 0; i < ansValues.Count; i++) phrases.Add(ansValues[i].ToString().Trim('"').ToLower());
 
+                    for (int i = 0; i < ansValues.Count; i++)
+                    {
+                        // Очищаем каждый вариант от кавычек и переводим в нижний регистр для распознавания
+                        string option = DecodeClipsString(ansValues[i].ToString().Trim('"')).ToLower();
+                        phrases.Add(option);
+                    }
+
+                    // Логируем в консоль для проверки отладки
+                    Console.WriteLine($"[DEBUG] Пришло вариантов ответов: {phrases.Count} ({string.Join(", ", phrases)})");
+
+                    // --- 3. Реакция системы ---
                     if (isVoiceEnabled)
                     {
                         this.Invoke(new MethodInvoker(() => {
-                            outputBox.AppendText("ВОПРОС (Голос): " + message + "\r\n");
+                            outputBox.AppendText("СИСТЕМА (Голос): " + message + "\r\n");
+
+                            // Синтезируем речь
                             synth.SpeakAsync(message);
+
+                            // Устанавливаем флаг ожидания
                             isWaitingForResponse = true;
+
+                            // ОБНОВЛЯЕМ ГРАММАТИКУ: теперь распознаватель ждет только "да" или "нет" (или то, что в answers)
                             NewRecognPhrases(phrases);
                         }));
                     }
                     else
                     {
+                        // 1. Получаем список ответов из слота answers
+                        ansValues = (MultifieldValue)proxy.GetSlotValue("answers");
+                        phrases = new List<string>();
+                        // 1. Сначала вытаскиваем сообщения (messages)
+                        MultifieldValue msgs = (MultifieldValue)proxy.GetSlotValue("messages");
+                        List<string> decodedMessages = new List<string>(); // Теперь список будет заполнен!
+
+                        for (int i = 0; i < msgs.Count; i++)
+                        {
+                            string raw = msgs[i].ToString().Trim('"');
+                            // Декодируем кириллицу
+                            decodedMessages.Add(Encoding.UTF8.GetString(Encoding.Default.GetBytes(raw)));
+                        }
+                        for (int i = 0; i < ansValues.Count; i++)
+                        {
+                            // Декодируем из CLIPS (учитывая кириллицу)
+                            string raw = ansValues[i].ToString().Trim('"');
+                            phrases.Add(Encoding.UTF8.GetString(Encoding.Default.GetBytes(raw)));
+                        }
+
+                        // 2. Выводим вопрос и создаем кнопки
                         this.Invoke(new MethodInvoker(() => {
-                            outputBox.AppendText("ВОПРОС (Окно): " + message + "\r\n");
+                            string question = decodedMessages.LastOrDefault() ?? "Выберите вариант:";
+                            outputBox.AppendText("СИСТЕМА: " + question + "\r\n");
 
-                            DialogResult res = MessageBox.Show(this, message, "Вопрос системы", MessageBoxButtons.YesNo);
-
-                            string clipAns = (res == DialogResult.Yes) ? "да" : "нет";
-
-                            clips.AssertString($"(answer \"{clipAns}\")");
-
-                            ExecuteEngineLoop();
+                            // Вызываем простое окно с кнопками из списка
+                            ShowResponseButtons(question, phrases);
                         }));
                     }
                 }
                 else
                 {
+                    // Если mode == 0, выводим финальные результаты
                     this.Invoke(new MethodInvoker(() => ShowProxyLogs()));
                 }
             }
         }
+        private void ShowResponseButtons(string question, List<string> options)
+        {
+            // Создаем простую форму
+            Form dialog = new Form()
+            {
+                Text = "Выбор ответа",
+                Width = 350,
+                Height = 150,
+                FormBorderStyle = FormBorderStyle.FixedToolWindow,
+                StartPosition = FormStartPosition.CenterParent
+            };
 
+            Label lbl = new Label() { Text = question, Dock = DockStyle.Top, Height = 50, TextAlign = ContentAlignment.MiddleCenter };
+            FlowLayoutPanel panel = new FlowLayoutPanel() { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
+
+            dialog.Controls.Add(panel);
+            dialog.Controls.Add(lbl);
+
+            foreach (string opt in options)
+            {
+                Button btn = new Button() { Text = opt, AutoSize = true };
+                btn.Click += (s, e) => {
+                    // ЛОГИКА ПРИ НАЖАТИИ:
+                    clips.AssertString($"(answer {opt})"); // Отправляем именно текст кнопки
+                    dialog.Close();                       // Закрываем диалог
+                    clips.Run();                          // Запускаем CLIPS дальше (после halt)
+                    ExecuteEngineLoop();                  // Проверяем следующий шаг системы
+                };
+                panel.Controls.Add(btn);
+            }
+            dialog.ShowDialog();
+        }
         private void ShowProxyLogs()
         {
             outputBox.Clear();
