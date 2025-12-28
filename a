@@ -9,7 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.Speech.Recognition;
-using Microsoft.Speech.Synthesis; // Добавлено для озвучки вопросов
+using Microsoft.Speech.Synthesis;
 using System.Threading.Tasks;
 using System.Media;
 
@@ -23,10 +23,10 @@ namespace ClipsFormsExample
         private bool isEditing = false;
         private CultureInfo invariantCulture = CultureInfo.InvariantCulture;
         private CultureInfo uiCulture = CultureInfo.CurrentUICulture;
-        private bool isWaitingForResponse = false; // Флаг: ждем ли мы ответа на вопрос
+        private bool isWaitingForResponse = false;
         private bool isVoiceEnabled = false;
         private Microsoft.Speech.Recognition.SpeechRecognitionEngine recog;
-        private Microsoft.Speech.Synthesis.SpeechSynthesizer synth; // Синтезатор речи
+        private Microsoft.Speech.Synthesis.SpeechSynthesizer synth;
         private string[] basicCommands = { "да", "нет", "открыть", "дальше", "рестарт" };
 
         public ClipsFormsExample()
@@ -43,44 +43,64 @@ namespace ClipsFormsExample
             synth.SetOutputToDefaultAudioDevice();
         }
 
+        private void NewRecognPhrases(List<string> phrases)
+        {
+            Choices choices = new Choices();
+
+            choices.Add(basicCommands);
+
+            if (phrases.Count > 0)
+            {
+                choices.Add(phrases.ToArray());
+            }
+            else
+            {
+                var ingredients = listView1.Items.Cast<ListViewItem>().Select(i => i.Text).ToArray();
+                if (ingredients.Length > 0) choices.Add(ingredients);
+            }
+
+            GrammarBuilder gb = new GrammarBuilder { Culture = new CultureInfo("ru-RU") };
+            gb.Append(choices);
+
+            recog.UnloadAllGrammars();
+            recog.LoadGrammar(new Grammar(gb));
+        }
+
         private void InitRecognition()
         {
             recog = new Microsoft.Speech.Recognition.SpeechRecognitionEngine(new CultureInfo("ru-RU"));
             UpdateGrammar(new List<string>());
             recog.SetInputToDefaultAudioDevice();
-
-            recog.SpeechRecognized += async (s, e) => {
+            recog.SpeechRecognized += (s, e) => {
                 if (!isVoiceEnabled) return;
+                string command = e.Result.Text.ToLower();
 
-                SystemSounds.Asterisk.Play();
-                string command = e.Result.Text;
-                string lowerCmd = command.ToLower();
-
-                // 1. Если ждем ответа на вопрос
-                if (isWaitingForResponse)
-                {
-                    if (lowerCmd == "да" || lowerCmd == "нет")
-                    {
-                        await Task.Delay(400);
-                        // Отправляем нажатие клавиш в активное окно (MessageBox)
-                        if (lowerCmd == "да")
-                            SendKeys.SendWait("{ENTER}");
-                        else
-                            SendKeys.SendWait("{RIGHT}{ENTER}");
-                    }
-                    return; // В режиме вопроса игнорируем всё остальное, включая ингредиенты
-                }
-
-                // 2. Если НЕ ждем ответа — обрабатываем системные команды и ингредиенты
-                switch (lowerCmd)
-                {
-                    case "открыть": this.Invoke(new MethodInvoker(() => openFile_Click(this, EventArgs.Empty))); return;
-                    case "дальше": this.Invoke(new MethodInvoker(() => nextBtn_Click(this, EventArgs.Empty))); return;
-                    case "рестарт": this.Invoke(new MethodInvoker(() => resetBtn_Click(this, EventArgs.Empty))); return;
-                }
-
-                // Обработка ингредиентов (сработает только если isWaitingForResponse == false)
                 this.Invoke(new MethodInvoker(() => {
+                    if (command == "открыть")
+                    {
+                        openFile_Click(this, EventArgs.Empty);
+                        return;
+                    }
+                    if (command == "дальше")
+                    {
+                        nextBtn_Click(this, EventArgs.Empty);
+                        return;
+                    }
+                    if (command == "рестарт")
+                    {
+                        resetBtn_Click(this, EventArgs.Empty);
+                        return;
+                    }
+
+                    if (isWaitingForResponse)
+                    {
+                        clips.AssertString($"(answer \"{command}\")");
+                        isWaitingForResponse = false;
+                        NewRecognPhrases(new List<string>());
+                        ExecuteEngineLoop();
+                        return;
+                    }
+
                     foreach (ListViewItem item in listView1.Items)
                     {
                         if (item.Text.Equals(command, StringComparison.OrdinalIgnoreCase))
@@ -197,29 +217,34 @@ namespace ClipsFormsExample
 
                 if (mode == "1")
                 {
-                    isWaitingForResponse = true; // Блокируем ингредиенты
-
                     string message = DecodeClipsString(((MultifieldValue)proxy.GetSlotValue("messages"))[0].ToString().Trim('"'));
+                    MultifieldValue ansValues = (MultifieldValue)proxy.GetSlotValue("answers");
+                    List<string> phrases = new List<string>();
+                    for (int i = 0; i < ansValues.Count; i++) phrases.Add(ansValues[i].ToString().Trim('"').ToLower());
 
-                    this.Invoke(new MethodInvoker(() => {
-                        outputBox.AppendText("СИСТЕМА: " + message + System.Environment.NewLine);
-                        if (isVoiceEnabled) synth.SpeakAsync(message);
-                    }));
+                    if (isVoiceEnabled)
+                    {
+                        this.Invoke(new MethodInvoker(() => {
+                            outputBox.AppendText("ВОПРОС (Голос): " + message + "\r\n");
+                            synth.SpeakAsync(message);
+                            isWaitingForResponse = true;
+                            NewRecognPhrases(phrases);
+                        }));
+                    }
+                    else
+                    {
+                        this.Invoke(new MethodInvoker(() => {
+                            outputBox.AppendText("ВОПРОС (Окно): " + message + "\r\n");
 
-                    // MessageBox блокирует поток, пока пользователь не ответит (голосом или кнопкой)
-                    DialogResult res = (DialogResult)this.Invoke(new Func<DialogResult>(() =>
-                        MessageBox.Show(this, message, "Вопрос", MessageBoxButtons.YesNo)));
+                            DialogResult res = MessageBox.Show(this, message, "Вопрос системы", MessageBoxButtons.YesNo);
 
-                    isWaitingForResponse = false;
+                            string clipAns = (res == DialogResult.Yes) ? "да" : "нет";
 
-                    // Приводим к нижнему регистру здесь, чтобы упростить жизнь CLIPS
-                    string clipAns = (res == DialogResult.Yes) ? "да" : "нет";
+                            clips.AssertString($"(answer \"{clipAns}\")");
 
-                    // Добавляем кавычки \" , чтобы в CLIPS попало (answer "да"), а не (answer да)
-                    clips.AssertString($"(answer \"{clipAns}\")");
-
-                    clips.Run();
-                    ExecuteEngineLoop();
+                            ExecuteEngineLoop();
+                        }));
+                    }
                 }
                 else
                 {
@@ -274,12 +299,6 @@ namespace ClipsFormsExample
             }
         }
 
-        private void UpdateListViewFromAnswer(string name, double cf)
-        {
-            foreach (ListViewItem item in listView1.Items)
-                if (item.Text == name) { item.Checked = (cf > 0); item.SubItems[1].Text = ToDisplayNumberString(cf); break; }
-        }
-
         private void listView1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             ListViewHitTestInfo hit = listView1.HitTest(e.Location);
@@ -328,12 +347,6 @@ namespace ClipsFormsExample
             btnVoice.BackColor = isVoiceEnabled ? Color.LightGreen : SystemColors.Control;
             if (isVoiceEnabled) recog.RecognizeAsync(RecognizeMode.Multiple);
             else recog.RecognizeAsyncStop();
-        }
-
-        private void saveAsButton_Click(object sender, EventArgs e)
-        {
-            if (clipsSaveFileDialog.ShowDialog() == DialogResult.OK)
-                File.WriteAllText(clipsSaveFileDialog.FileName, codeBox.Text, Encoding.UTF8);
         }
 
         private string DecodeClipsString(string t) { try { return Encoding.UTF8.GetString(Encoding.Default.GetBytes(t)); } catch { return t; } }
