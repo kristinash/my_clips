@@ -92,18 +92,26 @@
    (halt)
 )
 
-; Правило обработки ответа (Создает mood-factor, чтобы первое правило больше не сработало)
 (defrule handle-mood-voice
    (declare (salience 200))
    ?ans <- (answer ?val)
    ?proxy <- (ioproxy (current-ask "MOOD_QUESTION"))
    =>
-   (bind ?bonus (if (or (eq ?val "Да") (eq ?val "да")) then 0.1 else -0.1))
+   ; str-cat преобразует символ или строку в строку
+   ; lowcase делает текст маленьким ("Да" -> "да")
+   (bind ?normalized-val (lowcase (str-cat ?val)))
+   
+   (bind ?bonus (if (eq ?normalized-val "да") 
+                    then 0.1 
+                    else -0.1))
+   
    (assert (mood-factor (value ?bonus)))
+   
+   ; Очищаем состояние прокси
    (modify ?proxy (mode 0) (current-ask none) (messages) (answers))
    (retract ?ans)
+   (printout t "Mood bonus assigned: " ?bonus " based on: " ?val crlf)
 )
-
 ; Синхронизация ингредиентов из ListView
 (defrule match-ingredients
     (declare (salience 100))
@@ -113,8 +121,6 @@
     (modify ?f (certainty ?new-c))
     (retract ?q)
 )
-
-; --- Правила приготовления ---
 
 (defrule make-pizza-dough-std
     (declare (salience 10))
@@ -146,6 +152,32 @@
     )
 )
 
+(defrule make-sauce-fast
+    (declare (salience 10))
+    (ingredient (name "Томатная паста") (certainty ?c1&:(> ?c1 0.1)))
+    (ingredient (name "Вода") (certainty ?c2&:(> ?c2 0.1)))
+    ?f <- (ingredient (name "Соус томатный") (certainty ?cur-c))
+    =>
+    (bind ?res (* (weighted-avg ?c1 10 ?c2 5) 0.6))
+    (if (> ?res ?cur-c) then
+        (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Соус (быстрый) CF=" ?res))))
+    )
+)
+(defrule make-margherita-budget
+    (declare (salience 10))
+    (ingredient (name "Тесто для пиццы") (certainty ?c1&:(> ?c1 0.1)))
+    (ingredient (name "Соус томатный") (certainty ?c2&:(> ?c2 0.1)))
+    (ingredient (name "Сыр Российский") (certainty ?c3&:(> ?c3 0.1)))
+    ?f <- (ingredient (name "Пицца Маргарита") (certainty ?cur-c))
+    =>
+    (bind ?res (* (weighted-avg ?c1 5 ?c2 5 ?c3 10) 0.7))
+    (if (> ?res ?cur-c) then
+        (modify ?f (certainty (max-certainty ?cur-c ?res)) (type result))
+        (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца (бюджет) CF=" ?res))))
+    )
+)
+
 (defrule make-margherita-premium
     (declare (salience 10))
     (ingredient (name "Тесто для пиццы") (certainty ?c1&:(> ?c1 0.1)))
@@ -159,6 +191,7 @@
         (assert (sendmessage (value (str-cat "ПРОЦЕСС: Пицца (премиум) CF=" ?res))))
     )
 )
+
 
 ; --- Отчетность ---
 
