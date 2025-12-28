@@ -47,6 +47,8 @@
        else 0.0)
 )
 
+
+
 ; --- Начальные данные ---
 (deffacts initial-data
     (ioproxy (fact-id 112))
@@ -87,7 +89,7 @@
        (mode 1)
        (current-ask "MOOD_QUESTION")
        (messages "У вас сегодня хорошее настроение?")
-       (answers "да" "нет")) ; <--- ТУТ маленькими буквами
+       (answers "хорошее" "плохое")) ; <--- ТУТ маленькими буквами
    (halt)
 )
 
@@ -100,7 +102,7 @@
    ; lowcase делает текст маленьким ("Да" -> "да")
    (bind ?normalized-val (lowcase (str-cat ?val)))
    
-   (bind ?bonus (if (eq ?normalized-val "да") 
+   (bind ?bonus (if (eq ?normalized-val "хорошее") 
                     then 0.1 
                     else -0.1))
    
