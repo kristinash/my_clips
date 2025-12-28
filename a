@@ -27,7 +27,7 @@ namespace ClipsFormsExample
         private bool isVoiceEnabled = false;
         private Microsoft.Speech.Recognition.SpeechRecognitionEngine recog;
         private Microsoft.Speech.Synthesis.SpeechSynthesizer synth;
-        private string[] basicCommands = {  "открыть", "дальше", "рестарт" };
+        private string[] basicCommands = { "открыть", "дальше", "рестарт" };
 
         public ClipsFormsExample()
         {
@@ -43,13 +43,12 @@ namespace ClipsFormsExample
             synth.SetOutputToDefaultAudioDevice();
         }
 
-        private void NewRecognPhrases(List<string> phrases)
+        private void NewRecognPhrases(List<string> phrases = null)
         {
             Choices choices = new Choices();
-
             choices.Add(basicCommands);
 
-            if (phrases.Count > 0)
+            if (phrases != null && phrases.Count > 0)
             {
                 choices.Add(phrases.ToArray());
             }
@@ -61,7 +60,6 @@ namespace ClipsFormsExample
 
             GrammarBuilder gb = new GrammarBuilder { Culture = new CultureInfo("ru-RU") };
             gb.Append(choices);
-
             recog.UnloadAllGrammars();
             recog.LoadGrammar(new Grammar(gb));
         }
@@ -69,74 +67,56 @@ namespace ClipsFormsExample
         private void InitRecognition()
         {
             recog = new Microsoft.Speech.Recognition.SpeechRecognitionEngine(new CultureInfo("ru-RU"));
-            UpdateGrammar(new List<string>());
+            NewRecognPhrases();
             recog.SetInputToDefaultAudioDevice();
             recog.SpeechRecognized += (s, e) => {
                 if (!isVoiceEnabled) return;
                 string command = e.Result.Text.ToLower();
+                if (command == "открыть")
+                {
+                    openFile_Click(this, EventArgs.Empty);
+                    return;
+                }
+                if (command == "дальше")
+                {
+                    nextBtn_Click(this, EventArgs.Empty);
+                    return;
+                }
+                if (command == "рестарт")
+                {
+                    resetBtn_Click(this, EventArgs.Empty);
+                    return;
+                }
 
-                this.Invoke(new MethodInvoker(() => {
-                    if (command == "открыть")
-                    {
-                        openFile_Click(this, EventArgs.Empty);
-                        return;
-                    }
-                    if (command == "дальше")
-                    {
-                        nextBtn_Click(this, EventArgs.Empty);
-                        return;
-                    }
-                    if (command == "рестарт")
-                    {
-                        resetBtn_Click(this, EventArgs.Empty);
-                        return;
-                    }
+                if (isWaitingForResponse)
+                {
+                    clips.AssertString($"(answer \"{command}\")");
+                    isWaitingForResponse = false;
+                    NewRecognPhrases(new List<string>());
+                    ExecuteEngineLoop();
+                    return;
+                }
 
-                    if (isWaitingForResponse)
+                foreach (ListViewItem item in listView1.Items)
+                {
+                    if (item.Text.Equals(command, StringComparison.OrdinalIgnoreCase))
                     {
-                        clips.AssertString($"(answer \"{command}\")");
-                        isWaitingForResponse = false;
-                        NewRecognPhrases(new List<string>());
-                        ExecuteEngineLoop();
-                        return;
+                        item.Checked = !item.Checked;
+                        break;
                     }
-
-                    foreach (ListViewItem item in listView1.Items)
-                    {
-                        if (item.Text.Equals(command, StringComparison.OrdinalIgnoreCase))
-                        {
-                            item.Checked = !item.Checked;
-                            break;
-                        }
-                    }
-                }));
+                }
             };
-        }
-
-        private void UpdateGrammar(List<string> additionalWords)
-        {
-            Choices choices = new Choices();
-            choices.Add(basicCommands);
-            if (additionalWords.Count > 0) choices.Add(additionalWords.ToArray());
-            GrammarBuilder gb = new GrammarBuilder { Culture = new CultureInfo("ru-RU") };
-            gb.Append(choices);
-            recog.UnloadAllGrammars();
-            recog.LoadGrammar(new Grammar(gb));
         }
 
         private void SetupListViews()
         {
-            listView1.View = View.Details;
-            listView1.CheckBoxes = true;
-            listView1.FullRowSelect = true;
             listView1.Columns.Clear();
-            listView1.Columns.Add("Ингредиент / Блюдо", 250);
+            listView1.CheckBoxes = true;
+            listView1.Columns.Add("Ингредиент / Блюдо", 120);
             listView1.Columns.Add("Уверенность (CF)", 120);
-
-            listView2.View = View.Details;
-            listView2.FullRowSelect = true;
+          
             listView2.Columns.Clear();
-            listView2.Columns.Add("Блюдо / Продукт", 200);
+            listView2.Columns.Add("Блюдо / Продукт", 120);
             listView2.Columns.Add("Уверенность (CF)", 110);
         }
 
@@ -153,34 +133,47 @@ namespace ClipsFormsExample
                 {
                     string content = File.ReadAllText(filePath, Encoding.UTF8);
                     combinedContent.AppendLine($";; --- ФАЙЛ: {Path.GetFileName(filePath)} ---");
-                    combinedContent.AppendLine(CleanTextContent(content));
+                    combinedContent.AppendLine(content);
                     combinedContent.AppendLine();
                 }
                 codeBox.Text = combinedContent.ToString();
-                ParseClipsFile(codeBox.Text);
-                outputBox.Text = $"Загружено файлов: {loadedFilePaths.Count}.\r\nИспользуйте голос или выберите ингредиенты.\r\n";
+                clips.Clear();
+                var sorted = loadedFilePaths.OrderBy(p => !p.EndsWith("basic.clp", StringComparison.OrdinalIgnoreCase)).ToList();
+                foreach (string filePath in sorted)
+                {
+                    clips.Load(filePath);
+                }
+                clips.Reset();
+                LoadIngredientsFromClips();
+                outputBox.Text = $"Загружено файлов: {loadedFilePaths.Count}.\r\n" +
+                                 $"Текст выведен в codeBox, ингредиенты считаны из памяти CLIPS.\r\n";
             }
         }
 
-        private void ParseClipsFile(string text)
+        private void LoadIngredientsFromClips()
         {
             listView1.Items.Clear();
             listView2.Items.Clear();
             ingredientCFValues.Clear();
-            var matches = Regex.Matches(text, @"\(ingredient\s+\(name\s+""([^""]+)""\)", RegexOptions.IgnoreCase);
-            var uniqueNames = new HashSet<string>();
-            foreach (Match match in matches)
+            List<string> voiceNames = new List<string>();
+
+            MultifieldValue facts = (MultifieldValue)clips.Eval("(find-all-facts ((?f ingredient)) TRUE)");
+            for (int i = 0; i < facts.Count; i++)
             {
-                string name = match.Groups[1].Value;
-                if (uniqueNames.Add(name))
+                FactAddressValue feat = (FactAddressValue)facts[i];
+                string name = DecodeClipsString(feat.GetSlotValue("name").ToString().Trim('"'));
+                string type = feat.GetSlotValue("type").ToString();
+                if (!ingredientCFValues.ContainsKey(name))
                 {
                     ingredientCFValues[name] = 1.0;
                     var lvi = new ListViewItem(name);
                     lvi.SubItems.Add("");
                     listView1.Items.Add(lvi);
+                    voiceNames.Add(name);
                 }
             }
-            UpdateGrammar(uniqueNames.ToList());
+            NewRecognPhrases(voiceNames);
+
         }
 
         private void nextBtn_Click(object sender, EventArgs e)
@@ -205,26 +198,18 @@ namespace ClipsFormsExample
             });
         }
 
-
         private void ExecuteEngineLoop()
         {
-            // Запускаем механизм логического вывода
             clips.Run();
-
-            // Ищем факт прокси, который управляет вводом-выводом
             var matches = (MultifieldValue)clips.Eval("(find-all-facts ((?f ioproxy)) TRUE)");
 
             if (matches.Count > 0)
             {
-                // Берем первый найденный прокси-факт
                 FactAddressValue proxy = (FactAddressValue)matches[0];
-
-                // Получаем режим (mode): 0 - работа завершена/отчет, 1 - ожидание ответа на вопрос
                 string mode = proxy.GetSlotValue("mode").ToString();
 
                 if (mode == "1")
                 {
-                    // --- 1. Извлекаем текст вопроса ---
                     MultifieldValue msgValues = (MultifieldValue)proxy.GetSlotValue("messages");
                     string message = "Вопрос не задан";
                     if (msgValues.Count > 0)
@@ -232,79 +217,58 @@ namespace ClipsFormsExample
                         message = DecodeClipsString(msgValues[0].ToString().Trim('"'));
                     }
 
-                    // --- 2. Извлекаем варианты ответов (answers) ---
-                    // В CLIPS это мультислот, здесь он становится MultifieldValue
                     MultifieldValue ansValues = (MultifieldValue)proxy.GetSlotValue("answers");
                     List<string> phrases = new List<string>();
 
                     for (int i = 0; i < ansValues.Count; i++)
                     {
-                        // Очищаем каждый вариант от кавычек и переводим в нижний регистр для распознавания
                         string option = DecodeClipsString(ansValues[i].ToString().Trim('"')).ToLower();
                         phrases.Add(option);
                     }
 
-                    // Логируем в консоль для проверки отладки
-                    Console.WriteLine($"[DEBUG] Пришло вариантов ответов: {phrases.Count} ({string.Join(", ", phrases)})");
-
-                    // --- 3. Реакция системы ---
                     if (isVoiceEnabled)
                     {
                         this.Invoke(new MethodInvoker(() => {
                             outputBox.AppendText("СИСТЕМА (Голос): " + message + "\r\n");
-
-                            // Синтезируем речь
                             synth.SpeakAsync(message);
-
-                            // Устанавливаем флаг ожидания
                             isWaitingForResponse = true;
-
-                            // ОБНОВЛЯЕМ ГРАММАТИКУ: теперь распознаватель ждет только "да" или "нет" (или то, что в answers)
                             NewRecognPhrases(phrases);
                         }));
                     }
                     else
                     {
-                        // 1. Получаем список ответов из слота answers
                         ansValues = (MultifieldValue)proxy.GetSlotValue("answers");
                         phrases = new List<string>();
-                        // 1. Сначала вытаскиваем сообщения (messages)
                         MultifieldValue msgs = (MultifieldValue)proxy.GetSlotValue("messages");
-                        List<string> decodedMessages = new List<string>(); // Теперь список будет заполнен!
+                        List<string> decodedMessages = new List<string>();
 
                         for (int i = 0; i < msgs.Count; i++)
                         {
                             string raw = msgs[i].ToString().Trim('"');
-                            // Декодируем кириллицу
                             decodedMessages.Add(Encoding.UTF8.GetString(Encoding.Default.GetBytes(raw)));
                         }
                         for (int i = 0; i < ansValues.Count; i++)
                         {
-                            // Декодируем из CLIPS (учитывая кириллицу)
                             string raw = ansValues[i].ToString().Trim('"');
                             phrases.Add(Encoding.UTF8.GetString(Encoding.Default.GetBytes(raw)));
                         }
 
-                        // 2. Выводим вопрос и создаем кнопки
                         this.Invoke(new MethodInvoker(() => {
                             string question = decodedMessages.LastOrDefault() ?? "Выберите вариант:";
                             outputBox.AppendText("СИСТЕМА: " + question + "\r\n");
-
-                            // Вызываем простое окно с кнопками из списка
                             ShowResponseButtons(question, phrases);
                         }));
                     }
                 }
                 else
                 {
-                    // Если mode == 0, выводим финальные результаты
                     this.Invoke(new MethodInvoker(() => ShowProxyLogs()));
                 }
             }
         }
+
         private void ShowResponseButtons(string question, List<string> options)
         {
-            // Создаем простую форму
             Form dialog = new Form()
             {
                 Text = "Выбор ответа",
@@ -324,16 +288,16 @@ namespace ClipsFormsExample
             {
                 Button btn = new Button() { Text = opt, AutoSize = true };
                 btn.Click += (s, e) => {
-                    // ЛОГИКА ПРИ НАЖАТИИ:
-                    clips.AssertString($"(answer {opt})"); // Отправляем именно текст кнопки
-                    dialog.Close();                       // Закрываем диалог
-                    clips.Run();                          // Запускаем CLIPS дальше (после halt)
-                    ExecuteEngineLoop();                  // Проверяем следующий шаг системы
+                    clips.AssertString($"(answer {opt})");
+                    dialog.Close();
+                    clips.Run();
+                    ExecuteEngineLoop();
                 };
                 panel.Controls.Add(btn);
             }
             dialog.ShowDialog();
         }
+
         private void ShowProxyLogs()
         {
             outputBox.Clear();
@@ -431,7 +395,6 @@ namespace ClipsFormsExample
         }
 
         private string DecodeClipsString(string t) { try { return Encoding.UTF8.GetString(Encoding.Default.GetBytes(t)); } catch { return t; } }
-        private string CleanTextContent(string t) => Regex.Replace(t.TrimStart('\uFEFF'), @"[\u0000-\u0008\u000B\u000C\u000E-\u001F]", "");
         private string ToClipsNumberString(double v) => v.ToString("F6", invariantCulture);
         private string ToDisplayNumberString(double v) => v.ToString("F2", uiCulture);
         private double ParseNumberString(string t) { t = t.Trim().Replace(',', '.'); return double.TryParse(t, NumberStyles.Any, invariantCulture, out double r) ? Math.Max(-1, Math.Min(1, r)) : 1.0; }
